@@ -1,0 +1,30 @@
+{
+  "name": "estadisticas-ec",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generador independiente de imágenes y textos sobre la Serie A de Ecuador.",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "cli": "node src/cli/main.ts",
+    "migrar": "node src/cli/main.ts migrar",
+    "sincronizar": "node src/cli/main.ts sincronizar",
+    "ciclo": "node src/cli/main.ts ciclo",
+    "muestras": "node src/cli/main.ts muestras",
+    "sitio": "node src/cli/main.ts sitio",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "node --test \"test/**/*.test.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "jpeg-js": "0.4.4",
+    "satori": "0.63.2"
+  }
+}

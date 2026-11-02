@@ -1,0 +1,58 @@
+name: Sitio
+
+# Panel web estático (solo lectura) publicado en GitHub Pages.
+
+on:
+  workflow_run:
+    workflows: [Publicar]
+    types: [completed]
+  schedule:
+    - cron: '45 */6 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: npm
+
+      - run: npm ci
+
+      - name: Traer la base de datos de la rama estado
+        run: |
+          mkdir -p data
+          if git ls-remote --exit-code --heads origin estado >/dev/null 2>&1; then
+            git fetch --quiet --depth=1 origin estado
+            git show FETCH_HEAD:marcador.sqlite > data/marcador.sqlite
+          else
+            echo "Aún no existe la rama estado: se sincroniza directamente"
+            node src/cli/main.ts sincronizar --competicion serie-a
+          fi
+
+      - name: Generar el sitio
+        run: node src/cli/main.ts sitio --salida _site
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

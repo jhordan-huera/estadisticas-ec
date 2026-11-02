@@ -1,0 +1,86 @@
+{
+  "marca": {
+    "nombre": "Estadísticas EC",
+    "usuario": "@estadisticas_ec",
+    "pie": "No afiliados a la LigaPro ni a los clubes",
+    "usarLogos": true
+  },
+  "temporada": 2026,
+  "zonaHoraria": "America/Guayaquil",
+  "competiciones": {
+    "serie-a": {
+      "nombre": "Serie A Ecuador",
+      "tipo": "liga",
+      "proveedor": "espn",
+      "liga": "ecu.1",
+      "nombresFase": { "1": "Primera fase", "2": "Fase final" },
+      "nombresGrupo": { "1": "Grupo 1", "2": "Grupo 2", "3": "Grupo 3" },
+      "tabla": {
+        "puntosVictoria": 3,
+        "puntosEmpate": 1,
+        "puntosFaseFinal": "acumulados",
+        "desempate": ["puntos", "diferencia", "golesFavor", "enfrentamientos", "golesVisitante", "alfabetico"]
+      }
+    },
+    "copa-ecuador": {
+      "nombre": "Copa Ecuador",
+      "tipo": "copa",
+      "proveedor": "thesportsdb",
+      "liga": "5636",
+      "rondas": [64, 32, 16, 0],
+      "etiquetasRonda": {
+        "64": "Treintaidosavos de final",
+        "32": "Dieciseisavos de final",
+        "16": "Octavos de final",
+        "0": "Fase final"
+      }
+    },
+    "supercopa": {
+      "nombre": "Supercopa Ecuador",
+      "tipo": "copa",
+      "proveedor": "thesportsdb",
+      "liga": "5884",
+      "rondas": [0],
+      "etiquetasRonda": { "0": "Final" }
+    }
+  },
+  "textos": {
+    "hashtags": {
+      "base": ["#FutbolEcuatoriano", "#SerieAEcuador"],
+      "porTipo": {
+        "cartelera": ["#Cartelera"],
+        "tabla": ["#TablaDePosiciones"],
+        "goleadores": ["#Goleadores"]
+      },
+      "equipos": true,
+      "maximo": 8
+    },
+    "fuente": "Datos: ESPN"
+  },
+  "publicacion": {
+    "limiteDiario": 10,
+    "formato": "vertical",
+    "formatosRender": ["vertical", "cuadrado"],
+    "anchoInstagram": 1440,
+    "ventanaDias": 3,
+    "desde": "2026-11-02T00:00:00-05:00",
+    "anticipacionCarteleraHoras": 72,
+    "anticipacionPreviaHoras": 24,
+    "competiciones": {
+      "serie-a": ["cartelera", "resultado", "resumen", "tabla", "goleadores", "equipo", "duelo"],
+      "copa-ecuador": ["resultado"],
+      "supercopa": ["resultado"]
+    },
+    "instagram": { "version": "v23.0", "enviarTextoAlternativo": false }
+  },
+  "red": {
+    "espn": { "intervaloMs": 1000, "reintentos": 4, "timeoutMs": 20000 },
+    "thesportsdb": { "intervaloMs": 3500, "reintentos": 4, "timeoutMs": 20000 },
+    "cacheSegundos": {
+      "temporada": 300,
+      "fases": 86400,
+      "posiciones": 600,
+      "copa": 21600
+    }
+  }
+}

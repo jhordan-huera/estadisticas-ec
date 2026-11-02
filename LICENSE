@@ -1,0 +1,36 @@
+LICENCIA ESTADÍSTICAS EC 1.0
+
+Copyright (c) 2026 los titulares del proyecto Estadísticas EC.
+
+1. Concesión. Se permite a cualquier persona obtener una copia de este software y de su
+   documentación (el "Software") para usarlo, copiarlo, modificarlo y distribuirlo con fines
+   NO comerciales, siempre que se cumplan las condiciones de esta licencia.
+
+2. Uso comercial. Cualquier uso comercial del Software —incluidos su venta, su oferta como
+   servicio, o su uso para operar cuentas o publicaciones con fines de lucro o patrocinio—
+   requiere autorización previa y por escrito de los titulares.
+
+3. Atribución. Toda copia o trabajo derivado debe conservar este aviso de copyright, el texto
+   de esta licencia y una referencia visible al proyecto original.
+
+4. Marca. Esta licencia no concede derecho alguno sobre el nombre "Estadísticas EC", su identidad
+   visual ni ningún signo distintivo del proyecto. Los trabajos derivados que se publiquen
+   deben usar un nombre e identidad propios.
+
+5. Contenido de terceros. Los nombres de equipos, competiciones y jugadores, así como los datos
+   deportivos obtenidos de proveedores externos, pertenecen a sus respectivos titulares y no
+   forman parte de esta licencia. Quien use el Software es responsable de respetar los
+   términos de uso de cada fuente de datos y de cada plataforma en la que publique, y de no
+   presentar el contenido como oficial ni afiliado a ninguna liga o club.
+
+6. Componentes con licencia propia. Las tipografías incluidas en assets/fonts se distribuyen
+   bajo la SIL Open Font License 1.1, cuyo texto acompaña a los archivos. Las dependencias de
+   npm conservan sus propias licencias.
+
+7. Sin garantía. EL SOFTWARE SE ENTREGA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O
+   IMPLÍCITA, INCLUIDAS LAS DE COMERCIABILIDAD, IDONEIDAD PARA UN FIN DETERMINADO Y NO
+   INFRACCIÓN. LOS TITULARES NO SERÁN RESPONSABLES DE NINGÚN DAÑO O RECLAMO DERIVADO DEL USO
+   DEL SOFTWARE O DE LA EXACTITUD DE LOS DATOS QUE PROCESA O PUBLICA.
+
+8. Terminación. El incumplimiento de cualquiera de estas condiciones extingue automáticamente
+   los derechos concedidos por esta licencia.

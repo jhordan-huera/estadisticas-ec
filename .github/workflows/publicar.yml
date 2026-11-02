@@ -1,0 +1,92 @@
+name: Publicar
+
+# Ciclo completo: sincronizar → planificar → generar → subir imágenes → publicar.
+# Por defecto en SIMULACIÓN: solo publica de verdad si la variable de repositorio
+# DRY_RUN vale "false" o si se lanza a mano eligiendo el modo "real".
+
+on:
+  schedule:
+    # Cada hora, en el minuto 17 para evitar la congestión de la hora en punto.
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'Modo de publicación'
+        type: choice
+        options: [simulacion, real]
+        default: simulacion
+
+# Una sola ejecución a la vez: la rama "estado" y la cola no admiten escrituras simultáneas.
+concurrency:
+  group: marcador-estado
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  ciclo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MARCADOR_DB: estado/marcador.sqlite
+      MARCADOR_MEDIA: estado/media
+      MARCADOR_STATE_DIR: estado
+      IMAGE_BASE_URL: ${{ vars.IMAGE_BASE_URL || format('https://raw.githubusercontent.com/{0}/estado', github.repository) }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (inputs.modo == 'real' && 'false' || 'true') || vars.DRY_RUN || 'true' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: npm
+
+      - run: npm ci
+
+      - name: Preparar la rama de estado
+        run: scripts/estado.sh preparar
+
+      - name: Sincronizar datos
+        run: node src/cli/main.ts sincronizar
+
+      - name: Planificar publicaciones
+        run: node src/cli/main.ts planificar
+
+      - name: Generar imágenes y textos
+        run: node src/cli/main.ts generar
+
+      - name: Borrar imágenes de más de 30 días
+        run: node src/cli/main.ts limpiar --dias 30
+
+      - name: Subir el estado (las imágenes quedan públicas antes de publicar)
+        run: scripts/estado.sh guardar "generar $(date -u +'%Y-%m-%d %H:%M') UTC"
+
+      - name: Esperar a que GitHub sirva las imágenes nuevas
+        if: env.DRY_RUN == 'false'
+        run: sleep 20
+
+      - name: Publicar
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: node src/cli/main.ts publicar
+
+      # Se guarda aunque la publicación falle: la cola registra qué salió y evita duplicados.
+      - name: Guardar el estado de la cola
+        if: always() && hashFiles('estado/marcador.sqlite') != ''
+        run: scripts/estado.sh guardar "publicar $(date -u +'%Y-%m-%d %H:%M') UTC"
+
+      - name: Resumen
+        if: always() && hashFiles('estado/marcador.sqlite') != ''
+        run: |
+          {
+            echo "## Cola de publicaciones"
+            echo '```'
+            node src/cli/main.ts cola
+            echo '```'
+            echo "## Incidencias de datos (avisos y errores)"
+            echo '```'
+            node src/cli/main.ts incidencias --nivel warning
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
