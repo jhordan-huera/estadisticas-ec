@@ -10,7 +10,7 @@
 
 import type { PostKind, PublishingConfig } from '../core/config.ts';
 import { sha256 } from '../core/text.ts';
-import { localToday, toIsoUtc, toLocal } from '../core/time.ts';
+import { localToday, toIsoUtc, toLocal, withinLocalHours } from '../core/time.ts';
 import { scorersView, standingsView, type ViewContext } from '../content/views.ts';
 import { matchdays, type Matchday } from '../stats/matchday.ts';
 import { leagueMatches, seasonTables } from '../stats/season.ts';
@@ -46,7 +46,7 @@ export interface PlannerInput {
   ctx: ViewContext;
   now: Date;
   kinds: Set<PostKind>;
-  config: Pick<PublishingConfig, 'ventanaDias' | 'anticipacionCarteleraHoras' | 'anticipacionPreviaHoras' | 'desde'>;
+  config: Pick<PublishingConfig, 'ventanaDias' | 'anticipacionCarteleraHoras' | 'anticipacionPreviaHoras' | 'desde' | 'separacionPreviasMinutos' | 'horario'>;
   /** Huella del último contenido publicado por serie ("tabla:serie-a:2026" → huella). */
   snapshots: Map<string, string>;
 }
@@ -152,16 +152,60 @@ export function planCandidates(input: PlannerInput): Candidate[] {
     }
   }
 
-  // Partido en las próximas horas → previa
+  // Partido en las próximas horas → previa (escalonada si coinciden varias)
   if (kinds.has('duelo')) {
     const horizon = iso(new Date(now.getTime() + input.config.anticipacionPreviaHoras * HOUR));
+    const slots = previewSlots(leagueMatches(ctx.data), nowIso, input.config, ctx.timeZone);
     for (const m of leagueMatches(ctx.data)) {
       if (m.status !== 'scheduled' || m.kickoffUtc <= nowIso || m.kickoffUtc > horizon) continue;
-      out.push({ ...base('duelo'), dedupeKey: `duelo:${code}:${m.id}`, subject: { matchId: m.id }, expiresAt: m.kickoffUtc, reason: 'Partido en las próximas horas' });
+      const slot = slots.get(m.id);
+      if (!slot) continue;
+      out.push({ ...base('duelo'), scheduledFor: slot, dedupeKey: `duelo:${code}:${m.id}`, subject: { matchId: m.id }, expiresAt: m.kickoffUtc, reason: 'Partido en las próximas horas' });
     }
   }
 
+  // Horario de publicación: nada sale de madrugada salvo los resultados, que son noticia del momento.
+  const hours = { ...DEFAULT_HOURS, ...input.config.horario };
+  for (const c of out) {
+    if (c.kind === 'resultado' || c.kind === 'duelo') continue; // las previas ya vienen ajustadas
+    c.scheduledFor = withinLocalHours(c.scheduledFor, hours.desde, hours.hasta, ctx.timeZone);
+  }
+
   return out;
+}
+
+const DEFAULT_HOURS = { desde: '08:00', hasta: '23:00' };
+const DEFAULT_PREVIEW_GAP_MINUTES = 45;
+/** Una previa debe salir al menos este tiempo antes del partido; si no cabe, no se publica. */
+const MIN_PREVIEW_LEAD_MINUTES = 30;
+
+/**
+ * Hora de publicación de cada previa: "anticipacionPreviaHoras" antes del partido, dentro del
+ * horario permitido y separada de la anterior por "separacionPreviasMinutos" (en orden de hora
+ * de partido). Es determinista: cada ejecución calcula las mismas horas.
+ */
+export function previewSlots(
+  matches: { id: number; kickoffUtc: string; status: string }[],
+  nowIso: string,
+  config: Pick<PublishingConfig, 'anticipacionPreviaHoras' | 'separacionPreviasMinutos' | 'horario'>,
+  timeZone: string,
+): Map<number, string> {
+  const hours = { ...DEFAULT_HOURS, ...config.horario };
+  const gap = (config.separacionPreviasMinutos ?? DEFAULT_PREVIEW_GAP_MINUTES) * 60_000;
+  const upcoming = matches
+    .filter((m) => m.status === 'scheduled' && m.kickoffUtc > nowIso)
+    .sort((a, b) => (a.kickoffUtc < b.kickoffUtc ? -1 : a.kickoffUtc > b.kickoffUtc ? 1 : a.id - b.id));
+  const slots = new Map<number, string>();
+  let last = -Infinity;
+  for (const m of upcoming) {
+    const kickoff = Date.parse(m.kickoffUtc);
+    const ideal = Date.parse(withinLocalHours(iso(new Date(kickoff - config.anticipacionPreviaHoras * HOUR)), hours.desde, hours.hasta, timeZone));
+    const at = Math.max(ideal, last + gap);
+    if (at > kickoff - MIN_PREVIEW_LEAD_MINUTES * 60_000) continue;
+    slots.set(m.id, iso(new Date(at)));
+    last = at;
+  }
+  return slots;
 }
 
 /** Equipo con la racha vigente más llamativa (o ninguno si no hay rachas notables). */

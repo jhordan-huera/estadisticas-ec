@@ -70,3 +70,27 @@ export function toIsoUtc(iso: string): string {
 export function localToday(now: Date = new Date(), timeZone = DEFAULT_TIME_ZONE): string {
   return toLocal(now.toISOString(), timeZone).date;
 }
+
+/** Instante UTC (ISO) de una fecha y hora locales en la zona indicada: ("2026-11-07", "08:00"). */
+export function localToUtc(date: string, time: string, timeZone = DEFAULT_TIME_ZONE): string {
+  const wanted = Date.parse(`${date}T${time}:00Z`);
+  let guess = wanted;
+  // Dos ajustes bastan incluso con cambios de horario (Ecuador no tiene, pero la zona es configurable).
+  for (let i = 0; i < 2; i++) {
+    const local = toLocal(new Date(guess).toISOString(), timeZone);
+    guess += wanted - Date.parse(`${local.date}T${local.time}:00Z`);
+  }
+  return new Date(guess).toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+/**
+ * Lleva un instante a la franja permitida [desde, hasta) en hora local: antes de "desde"
+ * pasa a "desde" ese mismo día; desde "hasta" en adelante pasa a "desde" del día siguiente.
+ */
+export function withinLocalHours(isoUtc: string, from: string, to: string, timeZone = DEFAULT_TIME_ZONE): string {
+  const local = toLocal(isoUtc, timeZone);
+  if (local.time >= from && local.time < to) return isoUtc;
+  if (local.time < from) return localToUtc(local.date, from, timeZone);
+  const next = new Date(Date.parse(`${local.date}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+  return localToUtc(next, from, timeZone);
+}

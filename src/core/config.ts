@@ -80,6 +80,10 @@ export interface PublishingConfig {
   desde?: string;
   anticipacionCarteleraHoras: number;
   anticipacionPreviaHoras: number;
+  /** Minutos entre previas que coinciden (se publican escalonadas en orden de partido). */
+  separacionPreviasMinutos?: number;
+  /** Franja local en la que se publica (los resultados salen a cualquier hora). */
+  horario?: { desde: string; hasta: string };
   /** Tipos de publicación habilitados por competición. */
   competiciones: Record<string, PostKind[]>;
   instagram: { version: string; enviarTextoAlternativo: boolean };

@@ -114,6 +114,29 @@ describe('planificador', () => {
     assert.deepEqual(keys(cs), ['resultado:prueba:2', 'resumen:prueba:1:1']);
   });
 
+  it('escalona las previas de partidos que coinciden (45 min entre una y otra)', () => {
+    // Cuatro partidos el domingo 15 a las 15:00 de Ecuador (20:00Z): sus previas, el sábado desde las 15:00.
+    const data = season([
+      match(A, B, null, '2026-03-15T20:00:00Z', { id: 11 }),
+      match(C, D, null, '2026-03-15T20:00:00Z', { id: 12 }),
+      match(B, C, null, '2026-03-15T20:00:00Z', { id: 13 }),
+      match(D, A, null, '2026-03-15T20:00:00Z', { id: 14 }),
+    ]);
+    const cs = plan('2026-03-14T20:00:00Z', { data, kinds: ['duelo'] });
+    assert.deepEqual(
+      cs.map((c) => c.scheduledFor),
+      ['2026-03-14T20:00:00Z', '2026-03-14T20:45:00Z', '2026-03-14T21:30:00Z', '2026-03-14T22:15:00Z'],
+    );
+  });
+
+  it('no publica de madrugada: lo que cae fuera de 08:00–23:00 espera a las 08:00 (salvo resultados)', () => {
+    // Domingo 8 a las 23:30 de Ecuador (04:30Z del lunes): la tabla pasa al lunes 08:00 (13:00Z).
+    const data = season([match(A, B, [2, 0], '2026-03-09T03:00:00Z', { round: 1 }), match(C, D, [1, 1], '2026-03-09T03:00:00Z', { round: 1 })]);
+    const cs = plan('2026-03-09T04:30:00Z', { data, kinds: ['tabla', 'resultado'] });
+    assert.equal(cs.find((c) => c.kind === 'tabla')?.scheduledFor, '2026-03-09T13:00:00Z');
+    assert.ok(cs.filter((c) => c.kind === 'resultado').every((c) => c.scheduledFor === '2026-03-09T04:30:00Z'));
+  });
+
   it('solo produce los tipos habilitados para la competición', () => {
     const cs = plan('2026-03-09T03:00:00Z', { kinds: ['resultado'] });
     assert.ok(cs.every((c) => c.kind === 'resultado'));

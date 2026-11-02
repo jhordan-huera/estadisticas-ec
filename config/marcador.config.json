@@ -58,7 +58,7 @@
     "fuente": "Datos: ESPN"
   },
   "publicacion": {
-    "limiteDiario": 10,
+    "limiteDiario": 14,
     "formato": "vertical",
     "formatosRender": ["vertical", "cuadrado"],
     "anchoInstagram": 1440,
@@ -66,6 +66,8 @@
     "desde": "2026-11-02T00:00:00-05:00",
     "anticipacionCarteleraHoras": 72,
     "anticipacionPreviaHoras": 24,
+    "separacionPreviasMinutos": 45,
+    "horario": { "desde": "08:00", "hasta": "23:00" },
     "competiciones": {
       "serie-a": ["cartelera", "resultado", "resumen", "tabla", "goleadores", "equipo", "duelo"],
       "copa-ecuador": ["resultado"],
