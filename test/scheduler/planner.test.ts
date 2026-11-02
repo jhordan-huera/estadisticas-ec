@@ -71,6 +71,23 @@ describe('planificador', () => {
     assert.equal(plan('2026-03-09T04:00:00Z', { data, kinds: ['tabla'] }).length, 1);
   });
 
+  it('no publica la tabla mientras la fecha tenga partidos por jugar, aunque sean otro día', () => {
+    // A-B el sábado 7 ya terminó; C-D es el lunes 9. El sábado por la noche no hay tabla.
+    const data = season([
+      match(A, B, [2, 0], '2026-03-07T20:00:00Z', { round: 1 }),
+      match(C, D, null, '2026-03-09T20:00:00Z', { round: 1 }),
+    ]);
+    assert.equal(plan('2026-03-08T03:00:00Z', { data, kinds: ['tabla'] }).length, 0);
+  });
+
+  it('a la hora de inicio, un partido que la fuente aún da como programado cuenta como pendiente', () => {
+    const data = season([
+      match(A, B, [2, 0], '2026-03-07T20:00:00Z', { round: 1 }),
+      match(C, D, null, '2026-03-08T20:30:00Z', { round: 1 }),
+    ]);
+    assert.equal(plan('2026-03-08T20:30:32Z', { data, kinds: ['tabla'] }).length, 0);
+  });
+
   it('no publica la tabla con un partido en juego', () => {
     const data = scenario();
     data.matches[1] = { ...data.matches[1]!, status: 'live' };

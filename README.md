@@ -13,7 +13,7 @@ Generador automático de **imágenes y textos para redes sociales** sobre toda l
 | Cartelera | Hasta 72 h antes del primer partido de la fecha | Partidos agrupados por día, hora de Ecuador y estadio |
 | Resultado | Al terminar cada partido | Marcador, goleadores con minuto, expulsiones, puesto de cada equipo |
 | Resumen de la fecha | 1 h después de completarse la fecha | Todos los resultados, mayor goleada, partido con más goles, totales |
-| Tabla de posiciones | Solo si cambió, cuando ya no quedan partidos del día | Tablas de grupo o general, últimos 5, movimiento de puestos |
+| Tabla de posiciones | Solo si cambió, cuando la fecha en curso terminó entera (todos sus partidos finalizados) | Tablas de grupo o general, últimos 5, movimiento de puestos |
 | Goleadores (top 10) | 2 h después de completarse la fecha, solo si cambió | Acumulado gol a gol; los goles sin autor se informan aparte |
 | Radiografía de equipo | Al día siguiente del cierre de la fecha a las 10:00, del equipo con la racha más notable | Últimos 5, goles a favor y en contra, local/visita, vallas invictas |
 | Previa (carrusel de 2–3 imágenes) | 24 h antes de cada partido, escalonadas cada 45 min si coinciden | 1) La previa: puesto, balance, últimos 5, racha y rendimiento local/visita · 2) Cara a cara en números: comparativa de la temporada y goleador de cada equipo · 3) Duelos del año con goleadores (si ya se enfrentaron) |

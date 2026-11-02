@@ -127,6 +127,8 @@ export class MatchesRepo {
     if (existing.content_hash === m.contentHash) return { id: existing.id, outcome: 'unchanged', becameFinished: false };
 
     const becameFinished = existing.status !== 'finished' && m.status === 'finished';
+    // node:sqlite rechaza parámetros que la sentencia no usa: el UPDATE no lleva la clave ni finishedAt.
+    const { provider: _provider, ext: _ext, finishedAt: _finishedAt, ...updateParams } = params;
     run(
       this.#db,
       `UPDATE matches SET stage_id = :stage, group_id = :grp, round_label = :roundLabel,
@@ -138,7 +140,7 @@ export class MatchesRepo {
          events_complete = :complete, content_hash = :hash, updated_at = :now,
          finished_at = CASE WHEN :status = 'finished' THEN COALESCE(finished_at, :now) ELSE NULL END
        WHERE id = :id`,
-      { ...params, id: existing.id },
+      { ...updateParams, id: existing.id },
     );
     run(this.#db, 'DELETE FROM match_events WHERE match_id = :id', { id: existing.id });
     this.#insertEvents(existing.id, events);

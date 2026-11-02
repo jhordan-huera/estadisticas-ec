@@ -10,7 +10,7 @@
 
 import type { PostKind, PublishingConfig } from '../core/config.ts';
 import { sha256 } from '../core/text.ts';
-import { localToday, localToUtc, toIsoUtc, toLocal, withinLocalHours } from '../core/time.ts';
+import { localToUtc, toIsoUtc, toLocal, withinLocalHours } from '../core/time.ts';
 import { scorersView, standingsView, type ViewContext } from '../content/views.ts';
 import { matchdays, type Matchday } from '../stats/matchday.ts';
 import { leagueMatches, seasonTables } from '../stats/season.ts';
@@ -133,17 +133,20 @@ export function planCandidates(input: PlannerInput): Candidate[] {
     }
   }
 
-  // Tabla cambiada → tabla, cuando ya no quedan partidos del día por jugarse
+  // Tabla cambiada → tabla, solo cuando la fecha en curso terminó entera. No basta con mirar la
+  // hora de inicio: al llegar la hora un partido puede seguir "programado" en la fuente.
   if (kinds.has('tabla')) {
     const series = `tabla:${code}:${year}`;
     const view = standingsView(ctx, latestDone);
     const changed = view.fingerprint !== input.snapshots.get(series);
     const league = leagueMatches(ctx.data);
     const anyLive = league.some((m) => m.status === 'live');
-    const today = localToday(now, ctx.timeZone);
-    const laterToday = league.some((m) => m.status === 'scheduled' && m.kickoffUtc > nowIso && toLocal(m.kickoffUtc, ctx.timeZone).date === today);
-    const anyPlayed = league.some((m) => m.status === 'finished');
-    if (changed && anyPlayed && !anyLive && !laterToday) {
+    const leagueStages = new Set(ctx.data.stages.filter((s) => s.kind !== 'knockout').map((s) => s.id));
+    const current = days
+      .filter((d) => leagueStages.has(d.stageId) && d.firstKickoff <= nowIso)
+      .sort((a, b) => a.firstKickoff.localeCompare(b.firstKickoff))
+      .at(-1);
+    if (changed && current?.complete && !anyLive) {
       out.push({
         ...base('tabla'),
         dedupeKey: `tabla:${code}:${year}:${sha256(view.fingerprint).slice(0, 12)}`,
