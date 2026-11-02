@@ -301,7 +301,7 @@ function lineups(view: LineupsView) {
     ],
     teams: [view.home.team, view.away.team],
     situation: 'alineaciones',
-    alt: `Carrusel de alineaciones: primero ${team(view.home)}, después ${team(view.away)}; cada titular sobre la cancha con dorsal y apellido, y los suplentes debajo.`,
+    alt: `Carrusel de alineaciones: primero ${team(view.home)}, después ${team(view.away)}; cada titular sobre la cancha con una camiseta del color del club, dorsal y apellido, y los suplentes debajo.`,
   };
 }
 
