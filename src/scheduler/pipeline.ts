@@ -213,12 +213,12 @@ export async function publishQueue(app: AppContext, now: Date): Promise<PublishS
   }
   const publisher = choice.publisher;
   const tz = config.file.zonaHoraria;
-  let remaining = config.file.publicacion.limiteDiario - queue.publishedOn(localToday(now, tz), tz);
+  let remaining = config.file.publicacion.limiteDiario - queue.publishedOn(localToday(now, tz), tz, publisher.mode);
   const quota = await publisher.remainingQuota?.();
   if (quota !== undefined) remaining = Math.min(remaining, quota);
   const summary: PublishSummary = { mode: publisher.mode, published: 0, failed: 0, remainingToday: Math.max(0, remaining) };
 
-  for (const post of queue.dueForPublishing(iso(now), remaining)) {
+  for (const post of queue.dueForPublishing(iso(now), remaining, publisher.mode)) {
     try {
       const files = mediaToPublish(post, config.file.publicacion.formato);
       const result = await publisher.publish({

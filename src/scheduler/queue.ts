@@ -104,22 +104,30 @@ export class PostQueue {
     return many<PostRow>(this.#db, `SELECT * FROM posts WHERE status = 'pending' AND scheduled_for <= :now ORDER BY priority, scheduled_for, id`, { now });
   }
 
-  dueForPublishing(now: string, limit: number): PostRow[] {
+  /**
+   * Publicaciones listas para salir. En modo real también entran las que solo se publicaron
+   * en simulación: probar con DRY_RUN no debe impedir publicarlas de verdad (si no vencieron).
+   */
+  dueForPublishing(now: string, limit: number, mode: 'dry-run' | 'instagram' = 'dry-run'): PostRow[] {
     if (limit <= 0) return [];
     return many<PostRow>(
       this.#db,
-      `SELECT * FROM posts WHERE status = 'rendered' AND scheduled_for <= :now AND (expires_at IS NULL OR expires_at > :now)
+      `SELECT * FROM posts
+       WHERE (status = 'rendered' OR (:real = 1 AND status = 'published' AND mode = 'dry-run'))
+         AND scheduled_for <= :now AND (expires_at IS NULL OR expires_at > :now)
        ORDER BY priority, scheduled_for, id LIMIT :limit`,
-      { now, limit },
+      { now, limit, real: mode === 'instagram' ? 1 : 0 },
     );
   }
 
-  /** Publicaciones hechas en la fecha local indicada (zona de Ecuador). */
-  publishedOn(localDate: string, timeZone: string): number {
+  /** Publicaciones hechas en la fecha local indicada (zona de Ecuador), contadas por modo. */
+  publishedOn(localDate: string, timeZone: string, mode: 'dry-run' | 'instagram' = 'dry-run'): number {
     const since = new Date(Date.parse(`${localDate}T00:00:00Z`) - 2 * 86_400_000).toISOString();
-    return many<{ published_at: string }>(this.#db, `SELECT published_at FROM posts WHERE status = 'published' AND published_at >= :since`, { since }).filter(
-      (r) => toLocal(r.published_at, timeZone).date === localDate,
-    ).length;
+    return many<{ published_at: string }>(
+      this.#db,
+      `SELECT published_at FROM posts WHERE status = 'published' AND mode = :mode AND published_at >= :since`,
+      { since, mode },
+    ).filter((r) => toLocal(r.published_at, timeZone).date === localDate).length;
   }
 
   markRendered(id: number, data: { caption: string; altText: string; situation: string; media: MediaFile[]; fingerprint?: string }): void {

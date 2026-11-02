@@ -69,7 +69,7 @@ describe('cola de publicaciones', () => {
     queue.markPublished(p!.id, { mode: 'dry-run', externalId: 'x' });
     const today = new Date().toISOString();
     const local = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Guayaquil' }).format(new Date(today));
-    assert.equal(queue.publishedOn(local, 'America/Guayaquil'), 1);
+    assert.equal(queue.publishedOn(local, 'America/Guayaquil', 'dry-run'), 1);
   });
 
   it('al publicar una serie guarda su huella para no repetirla', () => {
@@ -78,6 +78,20 @@ describe('cola de publicaciones', () => {
     render(p!.id);
     queue.markPublished(p!.id, { mode: 'dry-run', externalId: 'x' });
     assert.equal(queue.snapshots().get('tabla:prueba'), 'v1');
+  });
+
+  it('lo publicado en simulación sigue disponible para publicar de verdad', () => {
+    queue.enqueue(candidate());
+    const [p] = queue.toRender('2026-03-10T00:00:00Z');
+    render(p!.id);
+    queue.markPublished(p!.id, { mode: 'dry-run', externalId: 'dry-run-1' });
+    assert.equal(queue.dueForPublishing('2026-03-10T00:00:00Z', 5, 'dry-run').length, 0);
+    assert.equal(queue.dueForPublishing('2026-03-10T00:00:00Z', 5, 'instagram').length, 1);
+    queue.markPublished(p!.id, { mode: 'instagram', externalId: 'M1' });
+    assert.equal(queue.dueForPublishing('2026-03-10T00:00:00Z', 5, 'instagram').length, 0);
+    const local = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Guayaquil' }).format(new Date());
+    assert.equal(queue.publishedOn(local, 'America/Guayaquil', 'instagram'), 1);
+    assert.equal(queue.publishedOn(local, 'America/Guayaquil', 'dry-run'), 0);
   });
 
   it('reintenta fallos temporales hasta el máximo y luego los deja como fallidos', () => {

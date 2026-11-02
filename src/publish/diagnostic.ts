@@ -58,6 +58,14 @@ export async function diagnoseInstagram(env: NodeJS.ProcessEnv, version: string,
     lines.push({ ok: false, label: 'IG_USER_ID', detail: 'no está definido' });
     return lines;
   }
+  if (kind === 'facebook-login') {
+    try {
+      const account = await get(`/${userId}`, { fields: 'username,name' });
+      lines.push({ ok: true, label: 'Cuenta', detail: `@${account.username} (id ${userId})` });
+    } catch (err) {
+      lines.push({ ok: false, label: 'Cuenta', detail: `El token no puede leer la cuenta ${userId}: ${String(err)}` });
+    }
+  }
   try {
     const quota = await get(`/${userId}/content_publishing_limit`, { fields: 'quota_usage,config' });
     const entry = (quota.data as { quota_usage?: number; config?: { quota_total?: number } }[] | undefined)?.[0];
