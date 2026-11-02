@@ -12,10 +12,10 @@ Generador automático de **imágenes y textos para redes sociales** sobre toda l
 |---|---|---|
 | Cartelera | Hasta 72 h antes del primer partido de la fecha | Partidos agrupados por día, hora de Ecuador y estadio |
 | Resultado | Al terminar cada partido | Marcador, goleadores con minuto, expulsiones, puesto de cada equipo |
-| Resumen de la fecha | Al completarse la fecha | Todos los resultados, mayor goleada, partido con más goles, totales |
+| Resumen de la fecha | 1 h después de completarse la fecha | Todos los resultados, mayor goleada, partido con más goles, totales |
 | Tabla de posiciones | Solo si cambió, cuando ya no quedan partidos del día | Tablas de grupo o general, últimos 5, movimiento de puestos |
-| Goleadores (top 10) | Tras cada fecha, solo si cambió | Acumulado gol a gol; los goles sin autor se informan aparte |
-| Radiografía de equipo | Tras cada fecha, del equipo con la racha más notable | Últimos 5, goles a favor y en contra, local/visita, vallas invictas |
+| Goleadores (top 10) | 2 h después de completarse la fecha, solo si cambió | Acumulado gol a gol; los goles sin autor se informan aparte |
+| Radiografía de equipo | Al día siguiente del cierre de la fecha a las 10:00, del equipo con la racha más notable | Últimos 5, goles a favor y en contra, local/visita, vallas invictas |
 | Previa (carrusel de 2–3 imágenes) | 24 h antes de cada partido, escalonadas cada 45 min si coinciden | 1) La previa: puesto, balance, últimos 5, racha y rendimiento local/visita · 2) Cara a cara en números: comparativa de la temporada y goleador de cada equipo · 3) Duelos del año con goleadores (si ya se enfrentaron) |
 
 Cada pieza se genera en **1080×1350** (vertical, la que se publica) y **1080×1080** (cuadrada). La previa se publica como **carrusel**: Instagram la cuenta como una sola publicación, así que no consume el límite diario por triplicado. Los textos se redactan con **plantillas propias y reglas por situación** (goleada, remontada, empate sin goles, líder nuevo, rachas…), con variantes elegidas de forma determinista. **No se usa inteligencia artificial.**
@@ -79,7 +79,7 @@ npm test            # pruebas (motor de estadísticas, planificador, cola, texto
   - competiciones y proveedores;
   - reglas de la tabla: puntos, **puntos acumulados o reiniciados en la fase final** y orden de desempate;
   - hashtags;
-  - límites de publicación: **límite diario**, formato, anticipación de cartelera y previas, tipos de pieza por competición, `separacionPreviasMinutos` (previas que coinciden salen escalonadas; 45 por defecto), `horario` (franja local de publicación, 08:00–23:00; los resultados salen a cualquier hora), `desde` (fecha de arranque: nada sobre partidos anteriores se publica; útil el primer día para no publicar resultados viejos) y `anchoInstagram` (ancho del JPEG publicado; 1440 px por defecto, el máximo que guarda Instagram, para que se vea nítido al acercar);
+  - límites de publicación: **límite diario**, formato, anticipación de cartelera y previas, tipos de pieza por competición, `separacionPreviasMinutos` (previas que coinciden salen escalonadas; 45 por defecto), `horario` (franja local de publicación, 08:00–23:00; los resultados salen a cualquier hora), `cierreFecha` (escalonado al cerrar una fecha: resumen +60 min, goleadores +120 min, radiografía a las 10:00 del día siguiente), `desde` (fecha de arranque: nada sobre partidos anteriores se publica; útil el primer día para no publicar resultados viejos) y `anchoInstagram` (ancho del JPEG publicado; 1440 px por defecto, el máximo que guarda Instagram, para que se vea nítido al acercar);
   - perfiles de red: intervalo entre peticiones, reintentos y caché.
 - **`config/equipos.json`**:
   - nombre, nombre corto, abreviatura, **color** y color de texto de cada equipo (se usan cuando no hay logos);

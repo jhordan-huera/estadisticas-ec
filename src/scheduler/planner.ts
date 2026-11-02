@@ -10,7 +10,7 @@
 
 import type { PostKind, PublishingConfig } from '../core/config.ts';
 import { sha256 } from '../core/text.ts';
-import { localToday, toIsoUtc, toLocal, withinLocalHours } from '../core/time.ts';
+import { localToday, localToUtc, toIsoUtc, toLocal, withinLocalHours } from '../core/time.ts';
 import { scorersView, standingsView, type ViewContext } from '../content/views.ts';
 import { matchdays, type Matchday } from '../stats/matchday.ts';
 import { leagueMatches, seasonTables } from '../stats/season.ts';
@@ -46,7 +46,10 @@ export interface PlannerInput {
   ctx: ViewContext;
   now: Date;
   kinds: Set<PostKind>;
-  config: Pick<PublishingConfig, 'ventanaDias' | 'anticipacionCarteleraHoras' | 'anticipacionPreviaHoras' | 'desde' | 'separacionPreviasMinutos' | 'horario'>;
+  config: Pick<
+    PublishingConfig,
+    'ventanaDias' | 'anticipacionCarteleraHoras' | 'anticipacionPreviaHoras' | 'desde' | 'separacionPreviasMinutos' | 'horario' | 'cierreFecha'
+  >;
   /** Huella del último contenido publicado por serie ("tabla:serie-a:2026" → huella). */
   snapshots: Map<string, string>;
 }
@@ -81,13 +84,17 @@ export function planCandidates(input: PlannerInput): Candidate[] {
     }
   }
 
-  // Fecha completa → resumen, goleadores y equipo destacado
+  // Fecha completa → resumen, goleadores y equipo destacado, escalonados tras el cierre:
+  // el resultado y la tabla salen al momento; el resumen después, luego los goleadores y la
+  // radiografía del equipo a la mañana siguiente. Las horas se fijan al encolar por primera vez.
+  const delays = { ...DEFAULT_CLOSING_DELAYS, ...input.config.cierreFecha };
+  const after = (minutes: number) => iso(new Date(now.getTime() + minutes * 60_000));
   const completed = days.filter((d) => d.complete && d.lastKickoff >= windowStart);
   for (const day of completed) {
     const subject = { stageId: day.stageId, round: day.round };
     const expiresAt = iso(new Date(Date.parse(day.lastKickoff) + (input.config.ventanaDias + 1) * DAY));
     if (kinds.has('resumen')) {
-      out.push({ ...base('resumen'), dedupeKey: `resumen:${code}:${day.stageId}:${day.round}`, subject, expiresAt, reason: `${day.label} completa` });
+      out.push({ ...base('resumen'), scheduledFor: after(delays.resumenMinutos), dedupeKey: `resumen:${code}:${day.stageId}:${day.round}`, subject, expiresAt, reason: `${day.label} completa` });
     }
   }
   const latestDone = completed.at(-1);
@@ -98,7 +105,16 @@ export function planCandidates(input: PlannerInput): Candidate[] {
       const series = `goleadores:${code}:${year}`;
       const fingerprint = scorersView(ctx).fingerprint;
       if (fingerprint && input.snapshots.get(series) !== fingerprint) {
-        out.push({ ...base('goleadores'), dedupeKey: `goleadores:${code}:${latestDone.stageId}:${latestDone.round}`, subject, expiresAt, series, fingerprint, reason: 'Goleadores actualizados tras la fecha' });
+        out.push({
+          ...base('goleadores'),
+          scheduledFor: after(delays.goleadoresMinutos),
+          dedupeKey: `goleadores:${code}:${latestDone.stageId}:${latestDone.round}`,
+          subject,
+          expiresAt,
+          series,
+          fingerprint,
+          reason: 'Goleadores actualizados tras la fecha',
+        });
       }
     }
     if (kinds.has('equipo')) {
@@ -106,6 +122,7 @@ export function planCandidates(input: PlannerInput): Candidate[] {
       if (teamId !== undefined) {
         out.push({
           ...base('equipo'),
+          scheduledFor: nextLocalTime(now, delays.equipoHora, ctx.timeZone),
           dedupeKey: `equipo:${code}:${latestDone.stageId}:${latestDone.round}`,
           subject: { ...subject, teamId },
           expiresAt,
@@ -175,6 +192,15 @@ export function planCandidates(input: PlannerInput): Candidate[] {
 }
 
 const DEFAULT_HOURS = { desde: '08:00', hasta: '23:00' };
+const DEFAULT_CLOSING_DELAYS = { resumenMinutos: 60, goleadoresMinutos: 120, equipoHora: '10:00' };
+
+/** Próxima vez que el reloj local marque `time` (hoy si aún no pasó, si no mañana). */
+function nextLocalTime(now: Date, time: string, timeZone: string): string {
+  const local = toLocal(now.toISOString(), timeZone);
+  if (local.time < time) return localToUtc(local.date, time, timeZone);
+  const tomorrow = new Date(Date.parse(`${local.date}T12:00:00Z`) + DAY).toISOString().slice(0, 10);
+  return localToUtc(tomorrow, time, timeZone);
+}
 const DEFAULT_PREVIEW_GAP_MINUTES = 45;
 /** Una previa debe salir al menos este tiempo antes del partido; si no cabe, no se publica. */
 const MIN_PREVIEW_LEAD_MINUTES = 30;

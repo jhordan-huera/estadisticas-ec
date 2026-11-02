@@ -84,6 +84,8 @@ export interface PublishingConfig {
   separacionPreviasMinutos?: number;
   /** Franja local en la que se publica (los resultados salen a cualquier hora). */
   horario?: { desde: string; hasta: string };
+  /** Escalonado al cerrar una fecha: resumen y goleadores N minutos después; el equipo, a una hora local fija. */
+  cierreFecha?: { resumenMinutos: number; goleadoresMinutos: number; equipoHora: string };
   /** Tipos de publicación habilitados por competición. */
   competiciones: Record<string, PostKind[]>;
   instagram: { version: string; enviarTextoAlternativo: boolean };

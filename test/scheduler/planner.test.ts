@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 import type { PostKind } from '../../src/core/config.ts';
 import { standingsView } from '../../src/content/views.ts';
 import { planCandidates } from '../../src/scheduler/planner.ts';
-import { A, B, C, D, ctxFor, match, season } from '../helpers.ts';
+import { A, B, C, D, ctxFor, event, match, player, season } from '../helpers.ts';
 
 const ALL: PostKind[] = ['cartelera', 'resultado', 'resumen', 'tabla', 'goleadores', 'equipo', 'duelo'];
 const config = { ventanaDias: 3, anticipacionCarteleraHoras: 72, anticipacionPreviaHoras: 24 };
@@ -135,6 +135,25 @@ describe('planificador', () => {
     const cs = plan('2026-03-09T04:30:00Z', { data, kinds: ['tabla', 'resultado'] });
     assert.equal(cs.find((c) => c.kind === 'tabla')?.scheduledFor, '2026-03-09T13:00:00Z');
     assert.ok(cs.filter((c) => c.kind === 'resultado').every((c) => c.scheduledFor === '2026-03-09T04:30:00Z'));
+  });
+
+  it('al cerrar la fecha escalona: resultado y tabla ya, resumen +1 h, goleadores +2 h, equipo a las 10:00 del día siguiente', () => {
+    const m1 = match(A, B, [1, 0], '2026-03-01T20:00:00Z', { round: 1 });
+    const m2 = match(A, C, [2, 0], '2026-03-04T20:00:00Z', { round: 2 });
+    const m3 = match(D, A, [0, 3], '2026-03-08T20:00:00Z', { round: 3 });
+    const m4 = match(B, C, [1, 1], '2026-03-08T20:00:00Z', { round: 3 });
+    const data = season([m1, m2, m3, m4, match(C, D, [0, 0], '2026-03-01T20:00:00Z', { round: 1 }), match(B, D, [0, 1], '2026-03-04T20:00:00Z', { round: 2 })], {
+      players: new Map([[1, player(1, 'Ana', A.id)]]),
+      events: [event(m3, 'goal', A.id, 1, 10)],
+    });
+    // Domingo 8 a las 17:30 de Ecuador (22:30Z), recién terminada la fecha 3.
+    const cs = plan('2026-03-08T22:30:00Z', { data });
+    const at = (kind: string) => cs.find((c) => c.kind === kind)?.scheduledFor;
+    assert.equal(at('resultado'), '2026-03-08T22:30:00Z');
+    assert.equal(at('tabla'), '2026-03-08T22:30:00Z');
+    assert.equal(at('resumen'), '2026-03-08T23:30:00Z');
+    assert.equal(at('goleadores'), '2026-03-09T00:30:00Z');
+    assert.equal(at('equipo'), '2026-03-09T15:00:00Z');
   });
 
   it('solo produce los tipos habilitados para la competición', () => {
