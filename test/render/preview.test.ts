@@ -75,4 +75,18 @@ describe('alineaciones confirmadas', () => {
     const ctx = ctxFor(season([m], { lineups: new Map([[32, [lineup(A.id)]]]) }));
     assert.throws(() => lineupsView(ctx, m), /no tiene alineación/);
   });
+
+  it('viste a cada equipo con la camiseta del partido y un dorsal legible', () => {
+    const m = match(A, B, null, '2026-08-01T20:00:00Z', { id: 33 });
+    const home = { ...lineup(A.id), kitColor: '#d10c29', kitDetail: '#f8f8ff' };
+    const away = { ...lineup(B.id), kitColor: '#c6fcff', kitDetail: null };
+    const view = lineupsView(ctxFor(season([m], { lineups: new Map([[33, [home, away]]]) })), m);
+    assert.deepEqual(view.home.kit, { fill: '#d10c29', number: '#f8f8ff', trim: '#f8f8ff' });
+    // Camiseta clara sin color de detalle: dorsal oscuro.
+    assert.equal(view.away.kit.fill, '#c6fcff');
+    assert.notEqual(view.away.kit.number, '#ffffff');
+    // Sin datos del partido, los colores del club.
+    const plain = lineupsView(ctxFor(season([m], { lineups: new Map([[33, [lineup(A.id), lineup(B.id)]]]) })), m);
+    assert.equal(plain.home.kit.fill, A.color);
+  });
 });

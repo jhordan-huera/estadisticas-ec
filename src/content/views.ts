@@ -4,6 +4,7 @@
 
 import type { TableRules } from '../core/config.ts';
 import { toLocal, DEFAULT_TIME_ZONE } from '../core/time.ts';
+import { contrastRatio, readableOn } from '../design/color.ts';
 import { visualFor, type LogoSet, type TeamVisual } from '../design/components/team.ts';
 import { headToHead, type HeadToHead } from '../stats/head-to-head.ts';
 import { matchFacts, type MatchFacts } from '../stats/match-facts.ts';
@@ -12,7 +13,7 @@ import { computeScorers, topScorers, type ScorerRow } from '../stats/scorers.ts'
 import { leagueMatches, seasonTables, tableMovement } from '../stats/season.ts';
 import type { StandingRow } from '../stats/standings.ts';
 import { teamEventStats, teamProfile, type TeamEventStats, type TeamProfile } from '../stats/team.ts';
-import type { SeasonData, StatLineupPlayer, StatMatch } from '../stats/types.ts';
+import type { SeasonData, StatLineup, StatLineupPlayer, StatMatch } from '../stats/types.ts';
 import { lineupRows } from '../stats/lineup-layout.ts';
 
 export interface ViewContext {
@@ -441,9 +442,19 @@ function streakLabel(p: TeamProfile): string | undefined {
 
 // ── Alineaciones confirmadas ──────────────────────────────────────────────
 
+export interface LineupKit {
+  /** Color de la camiseta. */
+  fill: string;
+  /** Color del dorsal, siempre legible sobre la camiseta. */
+  number: string;
+  /** Color del cuello. */
+  trim: string;
+}
+
 export interface LineupSide {
   team: TeamVisual;
   formation: string | null;
+  kit: LineupKit;
   /** Titulares por filas: arquero primero; cada fila de banda izquierda a derecha del equipo. */
   rows: StatLineupPlayer[][];
   bench: StatLineupPlayer[];
@@ -469,6 +480,7 @@ export function lineupsView(ctx: ViewContext, match: StatMatch, day?: Matchday):
     return {
       team: ctx.visuals.get(teamId)!,
       formation: l.formation,
+      kit: kitFor(ctx.visuals.get(teamId)!, l),
       rows: lineupRows(l.formation, l.players.filter((p) => p.starter)),
       bench: l.players.filter((p) => !p.starter),
     };
@@ -485,6 +497,14 @@ export function lineupsView(ctx: ViewContext, match: StatMatch, day?: Matchday):
     time: local.time,
     venue: match.venue ?? undefined,
   };
+}
+
+/** La camiseta que el equipo usa en el partido; si la fuente no la informa, sus colores de siempre. */
+function kitFor(team: TeamVisual, lineup: StatLineup): LineupKit {
+  const fill = lineup.kitColor ?? team.color;
+  const detail = lineup.kitColor ? (lineup.kitDetail ?? null) : team.textColor;
+  const number = detail && contrastRatio(fill, detail) >= 3 ? detail : readableOn(fill);
+  return { fill, number, trim: detail ?? number };
 }
 
 export type AnyView = FixturesView | ResultView | SummaryView | StandingsView | ScorersView | TeamStatsView | HeadToHeadView | LineupsView;

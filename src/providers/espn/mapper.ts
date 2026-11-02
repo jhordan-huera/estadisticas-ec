@@ -319,6 +319,7 @@ export function mapEspnLineups(summary: EspnSummary): ProviderLineup[] {
     .map((r) => ({
       teamExternalId: r.team.id,
       formation: r.formation?.trim() || null,
+      kit: hexColor(r.uniform?.color) ? { color: hexColor(r.uniform?.color)!, detail: hexColor(r.uniform?.alternateColor) } : null,
       players: (r.roster ?? []).map((p) => {
         const place = p.formationPlace === undefined || p.formationPlace === '' ? NaN : Number(p.formationPlace);
         return {
@@ -332,4 +333,10 @@ export function mapEspnLineups(summary: EspnSummary): ProviderLineup[] {
         };
       }),
     }));
+}
+
+/** "d10c29" → "#d10c29"; cualquier otra cosa → null. */
+function hexColor(value: string | undefined): string | null {
+  const v = value?.trim().replace(/^#/, '') ?? '';
+  return /^[0-9a-f]{6}$/i.test(v) ? `#${v.toLowerCase()}` : null;
 }

@@ -17,7 +17,7 @@ Generador automático de **imágenes y textos para redes sociales** sobre toda l
 | Goleadores (top 10) | 2 h después de completarse la fecha, solo si cambió | Acumulado gol a gol; los goles sin autor se informan aparte |
 | Radiografía de equipo | Al día siguiente del cierre de la fecha a las 10:00, del equipo con la racha más notable | Últimos 5, goles a favor y en contra, local/visita, vallas invictas |
 | Previa (carrusel de 2–3 imágenes) | 24 h antes de cada partido, escalonadas cada 45 min si coinciden | 1) La previa: puesto, balance, últimos 5, racha y rendimiento local/visita · 2) Cara a cara en números: comparativa de la temporada y goleador de cada equipo · 3) Duelos del año con goleadores (si ya se enfrentaron) |
-| Alineaciones confirmadas (carrusel de 2 imágenes) | En cuanto ESPN publica los dos onces (se consultan desde 2 h antes del inicio); vencen a los 45 min de juego y se publican aunque sea fuera del horario | 1) Local · 2) Visitante: los 11 titulares sobre la cancha según su formación, cada uno con una camiseta del color del club, dorsal y apellido, y la lista de suplentes |
+| Alineaciones confirmadas (carrusel de 2 imágenes) | En cuanto ESPN publica los dos onces (se consultan desde 2 h antes del inicio); vencen a los 45 min de juego y se publican aunque sea fuera del horario | 1) Local · 2) Visitante: los 11 titulares sobre la cancha según su formación, cada uno con la camiseta que usa ese día según ESPN (o, si no la informa, la del club), dorsal y apellido, y la lista de suplentes. El texto da la formación y el DT de cada equipo |
 
 Cada pieza se genera en **1080×1350** (vertical, la que se publica) y **1080×1080** (cuadrada). La previa y las alineaciones se publican como **carrusel**: Instagram cuenta cada uno como una sola publicación, así que no consumen el límite diario por cada imagen. Los textos se redactan con **plantillas propias y reglas por situación** (goleada, remontada, empate sin goles, líder nuevo, rachas…), con variantes elegidas de forma determinista. **No se usa inteligencia artificial.**
 
@@ -86,7 +86,8 @@ npm test            # pruebas (motor de estadísticas, planificador, cola, texto
 - **`config/equipos.json`**:
   - nombre, nombre corto, abreviatura, **color** y color de texto de cada equipo (se usan cuando no hay logos);
   - alias para enlazar el mismo club entre proveedores;
-  - hashtag propio opcional.
+  - hashtag propio opcional;
+  - **`dt`**: director técnico actual. Ninguna fuente de datos lo informa, así que se actualiza a mano cuando un club cambia de técnico. Va en el texto de las alineaciones; si falta, el texto sale sin él y queda un aviso en el registro.
 
 ### Variables de entorno
 

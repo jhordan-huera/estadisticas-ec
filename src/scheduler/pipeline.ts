@@ -123,6 +123,7 @@ export async function renderQueue(app: AppContext, now: Date): Promise<RenderSum
         teamOverrides: config.teams,
       };
       const caption = writeCaption(view, copy);
+      for (const w of caption.warnings) logger.warn(`${post.dedupe_key}: ${w}`);
       const dir = join(config.env.mediaDir, localToday(now, config.file.zonaHoraria));
       mkdirSync(dir, { recursive: true });
       const stem = post.dedupe_key.replace(/[^a-z0-9-]+/gi, '_');

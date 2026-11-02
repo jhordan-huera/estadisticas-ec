@@ -20,13 +20,14 @@ export class LineupsRepo {
   }
 
   /** Reemplaza la alineación del equipo en el partido. */
-  save(matchId: number, teamId: number, formation: string | null, players: LineupPlayerInput[]): void {
+  save(matchId: number, teamId: number, formation: string | null, kit: { color: string; detail: string | null } | null, players: LineupPlayerInput[]): void {
     run(this.#db, 'DELETE FROM lineup_players WHERE match_id = :m AND team_id = :t', { m: matchId, t: teamId });
     run(
       this.#db,
-      `INSERT INTO match_lineups (match_id, team_id, formation, fetched_at) VALUES (:m, :t, :f, :now)
-       ON CONFLICT(match_id, team_id) DO UPDATE SET formation = excluded.formation, fetched_at = excluded.fetched_at`,
-      { m: matchId, t: teamId, f: formation, now: nowIso() },
+      `INSERT INTO match_lineups (match_id, team_id, formation, kit_color, kit_detail, fetched_at) VALUES (:m, :t, :f, :kc, :kd, :now)
+       ON CONFLICT(match_id, team_id) DO UPDATE SET formation = excluded.formation, kit_color = excluded.kit_color,
+         kit_detail = excluded.kit_detail, fetched_at = excluded.fetched_at`,
+      { m: matchId, t: teamId, f: formation, kc: kit?.color ?? null, kd: kit?.detail ?? null, now: nowIso() },
     );
     for (const p of players) {
       run(

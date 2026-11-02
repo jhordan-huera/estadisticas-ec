@@ -70,6 +70,7 @@ export async function syncLineups(
             match.id,
             teamId,
             l.formation,
+            l.kit,
             l.players.map((p) => ({
               playerId: teams.ensurePlayer(provider.id, { externalId: p.externalId, name: p.name, shortName: p.shortName }, teamId),
               name: p.shortName,

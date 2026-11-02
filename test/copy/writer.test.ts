@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { resultView, standingsView } from '../../src/content/views.ts';
+import { lineupsView, resultView, standingsView } from '../../src/content/views.ts';
 import { deriveHashtag, hashtagsFor } from '../../src/copy/hashtags.ts';
 import { chooseStreak } from '../../src/copy/rules.ts';
 import { fill, pick, stableHash } from '../../src/copy/variants.ts';
@@ -85,5 +85,25 @@ describe('hashtags', () => {
     assert.equal(deriveHashtag('Técnico Universitario'), '#TecnicoUniversitario');
     const tags = hashtagsFor('tabla', [ctxFor(season([])).visuals.get(A.id)!, ctxFor(season([])).visuals.get(A.id)!], { ...hashtags, porTipo: { tabla: ['#Tabla', '#futbolecuatoriano'] } }, new Map());
     assert.deepEqual(tags, ['#FutbolEcuatoriano', '#Tabla', '#AtleticoAndino']);
+  });
+});
+
+describe('alineaciones', () => {
+  const xi = (teamId: number) => ({
+    teamId,
+    formation: '4-4-2',
+    players: Array.from({ length: 11 }, (_, i) => ({ playerId: teamId * 100 + i, name: `Jugador${teamId}${i}`, jersey: String(i + 1), position: null, formationPlace: i + 1, starter: true })),
+  });
+
+  it('da la formación y el DT de cada equipo, sin repetir los onces de la imagen', () => {
+    const m = match(A, B, null, '2026-08-01T20:00:00Z', { id: 41 });
+    const data = season([m], { lineups: new Map([[41, [xi(A.id), xi(B.id)]]]) });
+    const ctx = { ...copyCtx(data), teamOverrides: { 'espn:1': { abrev: A.abbr, dt: 'Ana Torres' } } };
+    const caption = writeCaption(lineupsView(ctxFor(data), m), ctx);
+    assert.match(caption.text, /Atlético Andino \(4-4-2\) · DT: Ana Torres/);
+    assert.match(caption.text, /^Barrio Bravo \(4-4-2\)$/m);
+    assert.doesNotMatch(caption.text, /Jugador/);
+    // El DT que falta no se omite en silencio: queda como aviso.
+    assert.deepEqual(caption.warnings, ['Falta el DT de Barrio Bravo (campo "dt" en config/equipos.json)']);
   });
 });

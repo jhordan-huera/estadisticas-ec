@@ -103,6 +103,7 @@ export const renderCommands = {
       const caption = writeCaption(view, copy);
       writeFileSync(join(dir, `${name}.txt`), caption.text + '\n');
       out(`✓ ${join(dir, `${name}.txt`)} [${caption.situation}]`);
+      for (const w of caption.warnings) out(`  ⚠ ${w}`);
       for (const format of selected) {
         const slides = slidesFor(view, format, brand);
         for (const [i, slide] of slides.entries()) {

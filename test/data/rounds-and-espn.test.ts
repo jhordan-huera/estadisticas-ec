@@ -118,13 +118,14 @@ describe('traducción de ESPN', () => {
 });
 
 describe('alineaciones de ESPN', () => {
-  it('traduce titulares y suplentes con apellido, dorsal, posición y lugar en el esquema', () => {
+  it('traduce titulares, suplentes y la camiseta del partido', () => {
     const summary: EspnSummary = {
       rosters: [
         {
           homeAway: 'home',
           formation: ' 4-4-2 ',
           team: { id: '10' },
+          uniform: { type: 'home', color: 'D10C29', alternateColor: 'f8f8ff' },
           roster: [
             { starter: true, jersey: '1', formationPlace: '1', position: { abbreviation: 'G' }, athlete: { id: 'a1', displayName: 'Juan Pérez', lastName: 'Pérez' } },
             { starter: false, jersey: '22', formationPlace: '0', position: { abbreviation: 'SUB' }, athlete: { id: 'a2', displayName: 'Luis Mora', shortName: 'L. Mora' } },
@@ -137,6 +138,7 @@ describe('alineaciones de ESPN', () => {
       {
         teamExternalId: '10',
         formation: '4-4-2',
+        kit: { color: '#d10c29', detail: '#f8f8ff' },
         players: [
           { externalId: 'a1', name: 'Juan Pérez', shortName: 'Pérez', jersey: '1', position: 'G', formationPlace: 1, starter: true },
           { externalId: 'a2', name: 'Luis Mora', shortName: 'L. Mora', jersey: '22', position: 'SUB', formationPlace: null, starter: false },

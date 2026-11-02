@@ -42,6 +42,8 @@ export interface Caption {
   altText: string;
   /** Situación detectada (para depurar y para el planificador). */
   situation: string;
+  /** Datos que faltaron al redactar (se registran en el log; el texto sale sin ellos). */
+  warnings: string[];
 }
 
 export interface CopyContext {
@@ -72,7 +74,7 @@ export function seedFor(view: AnyView): string {
 
 export function writeCaption(view: AnyView, ctx: CopyContext): Caption {
   const seed = seedFor(view);
-  let body: { lines: string[]; teams: TeamVisual[]; alt: string; situation: string };
+  let body: { lines: string[]; teams: TeamVisual[]; alt: string; situation: string; warnings?: string[] };
   switch (view.kind) {
     case 'cartelera':
       body = fixtures(view, seed);
@@ -96,13 +98,13 @@ export function writeCaption(view: AnyView, ctx: CopyContext): Caption {
       body = h2h(view, seed);
       break;
     case 'alineaciones':
-      body = lineups(view);
+      body = lineups(view, coachMap(ctx.teamOverrides));
       break;
   }
   const hashtags = hashtagsFor(view.kind, body.teams, ctx.config.hashtags, teamHashtagMap(ctx.teamOverrides));
   const closing = [ctx.config.fuente, ctx.disclaimer].filter(Boolean).join(' · ');
   const text = [...body.lines, '', closing, '', hashtags.join(' ')].join('\n').replace(/\n{3,}/g, '\n\n').trim();
-  return { text, hashtags, altText: body.alt, situation: body.situation };
+  return { text, hashtags, altText: body.alt, situation: body.situation, warnings: body.warnings ?? [] };
 }
 
 // ── Por tipo ──────────────────────────────────────────────────────────────
@@ -285,24 +287,37 @@ function h2h(view: HeadToHeadView, seed: string) {
   };
 }
 
-function lineups(view: LineupsView) {
-  // Notación clásica: arquero; defensas; volantes; delanteros.
-  const xi = (side: LineupsView['home']) => side.rows.map((row) => row.map((p) => p.name).join(', ')).join('; ');
-  const team = (side: LineupsView['home']) => `${side.team.shortName}${side.formation ? ` (${side.formation})` : ''}`;
+function lineups(view: LineupsView, coaches: Map<string, string>) {
+  // Los onces ya están en las imágenes: el texto da la formación y el técnico de cada uno.
+  const warnings: string[] = [];
+  const formation = (side: LineupsView['home']) => `${side.team.shortName}${side.formation ? ` (${side.formation})` : ''}`;
+  const team = (side: LineupsView['home']) => {
+    const coach = coaches.get(side.team.abbr);
+    if (!coach) warnings.push(`Falta el DT de ${side.team.shortName} (campo "dt" en config/equipos.json)`);
+    return coach ? `${formation(side)} · DT: ${coach}` : formation(side);
+  };
   const where = view.venue ? ` · ${view.venue}` : '';
   return {
     lines: [
       `📋 Alineaciones confirmadas: ${view.home.team.shortName} vs ${view.away.team.shortName}`,
       `${view.kicker ? `${view.kicker} · ` : ''}${capitalize(view.dateLabel)}, ${view.time}${where}`,
       '',
-      `${team(view.home)}: ${xi(view.home)}.`,
+      team(view.home),
+      team(view.away),
       '',
-      `${team(view.away)}: ${xi(view.away)}.`,
+      'Desliza para ver el once de cada equipo.',
     ],
     teams: [view.home.team, view.away.team],
     situation: 'alineaciones',
-    alt: `Carrusel de alineaciones: primero ${team(view.home)}, después ${team(view.away)}; cada titular sobre la cancha con una camiseta del color del club, dorsal y apellido, y los suplentes debajo.`,
+    alt: `Carrusel de alineaciones: primero ${formation(view.home)}, después ${formation(view.away)}; cada titular sobre la cancha con la camiseta del partido, dorsal y apellido, y los suplentes debajo.`,
+    warnings,
   };
+}
+
+function coachMap(overrides: Record<string, TeamOverride>): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const o of Object.values(overrides)) if (o.abrev && o.dt?.trim()) map.set(o.abrev, o.dt.trim());
+  return map;
 }
 
 // ── Utilidades ────────────────────────────────────────────────────────────

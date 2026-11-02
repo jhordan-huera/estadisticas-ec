@@ -116,6 +116,8 @@ export interface TeamOverride {
   texto?: string;
   /** Hashtag propio del equipo (si no, se deriva del nombre). */
   hashtag?: string;
+  /** Director técnico actual; ninguna fuente de datos lo informa, se mantiene a mano. */
+  dt?: string;
   verificar?: boolean;
 }
 

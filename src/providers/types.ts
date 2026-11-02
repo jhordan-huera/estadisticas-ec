@@ -113,6 +113,8 @@ export interface ProviderLineup {
   teamExternalId: string;
   /** "4-2-3-1" (puede faltar). */
   formation: string | null;
+  /** Colores de la camiseta que usa en ese partido, si el proveedor los informa. */
+  kit: { color: string; detail: string | null } | null;
   players: {
     externalId: string;
     name: string;

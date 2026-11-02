@@ -80,6 +80,9 @@ export interface StatLineupPlayer {
 export interface StatLineup {
   teamId: number;
   formation: string | null;
+  /** Camiseta del partido (#rrggbb) y color de sus detalles, si se conocen. */
+  kitColor?: string | null;
+  kitDetail?: string | null;
   players: StatLineupPlayer[];
 }
 

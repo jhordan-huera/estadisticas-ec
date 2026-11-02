@@ -110,5 +110,12 @@ export interface EspnRosterEntry {
 }
 
 export interface EspnSummary {
-  rosters?: { homeAway?: string; formation?: string; team: { id: string }; roster?: EspnRosterEntry[] }[];
+  rosters?: {
+    homeAway?: string;
+    formation?: string;
+    team: { id: string };
+    roster?: EspnRosterEntry[];
+    /** Uniforme que usa el equipo en ese partido (colores sin "#"). */
+    uniform?: { type?: string; color?: string; alternateColor?: string };
+  }[];
 }

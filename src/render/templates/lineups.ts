@@ -2,11 +2,11 @@
 // Cada equipo ocupa la cancha entera atacando hacia arriba (arquero abajo, delanteros arriba)
 // y debajo van sus suplentes.
 
-import type { LineupSide, LineupsView } from '../../content/views.ts';
+import type { LineupKit, LineupSide, LineupsView } from '../../content/views.ts';
 import { frame, type BrandInfo } from '../../design/components/brand.ts';
 import { chip } from '../../design/components/stats.ts';
-import { teamMark, type TeamVisual } from '../../design/components/team.ts';
-import { withAlpha } from '../../design/color.ts';
+import { teamMark } from '../../design/components/team.ts';
+import { luminance, withAlpha } from '../../design/color.ts';
 import { h, img, line, type VNode } from '../../design/h.ts';
 import { estimateWidth, fitSize } from '../../design/text-fit.ts';
 import { fonts, palette, type, type Format } from '../../design/tokens.ts';
@@ -99,7 +99,7 @@ function pitch(side: LineupSide, W: number, H: number, compact: boolean): VNode 
     abs({ left: (W - boxW) / 2, top: H - inset - boxH, width: boxW, height: boxH, border: `${chalk}px solid ${CHALK}`, borderBottom: 'none' }),
     abs({ left: (W - smallW) / 2, top: H - inset - smallH, width: smallW, height: smallH, border: `${chalk}px solid ${CHALK}`, borderBottom: 'none' }),
   ];
-  const size = compact ? 56 : 72;
+  const size = compact ? 54 : 70;
   return h(
     'div',
     { position: 'relative', width: W, height: H, flexShrink: 0, borderRadius: 18, overflow: 'hidden', border: `1px solid ${palette.line}` },
@@ -110,31 +110,32 @@ function pitch(side: LineupSide, W: number, H: number, compact: boolean): VNode 
 /** El arquero junto al arco de abajo y cada línea más arriba; dentro de la fila, de banda izquierda a derecha. */
 function placePlayers(side: LineupSide, W: number, H: number, baseSize: number): VNode[] {
   // El apellido va debajo de la camiseta: la fila del arquero se sube para que no toque el borde.
-  const bottom = H - H * 0.07 - baseSize * 0.75;
-  const top = H * 0.14;
+  const bottom = H - H * 0.06 - baseSize * 1.25;
+  const top = H * 0.13;
   const step = (bottom - top) / Math.max(1, side.rows.length - 1);
   // Con muchas líneas (4-1-2-1-2) se achican las camisetas para que no se pisen.
-  const size = Math.min(baseSize, Math.floor((step - 4) / 1.75));
-  const nameWidth = Math.min(180, W / 5.2);
+  const size = Math.min(baseSize, Math.floor((step - 6) / 1.95));
   const shirt = shirtSize(size);
+  const nameSize = uniformNameSize(side, W, Math.round(size * 0.46), Math.round(size * 0.3));
   const nodes: VNode[] = [];
   side.rows.forEach((row, i) => {
     const y = bottom - i * step;
+    const slot = Math.min(260, (2 * W) / (row.length + 1));
     row.forEach((p, j) => {
       const x = (W * (j + 1)) / (row.length + 1);
       nodes.push(
         h(
           'div',
-          { position: 'absolute', left: x - nameWidth / 2, top: y - shirt.height / 2, width: nameWidth, flexDirection: 'column', alignItems: 'center', gap: 4 },
-          jersey(side.team, p.jersey, size),
+          { position: 'absolute', left: x - slot / 2, top: y - shirt.height / 2, width: slot, flexDirection: 'column', alignItems: 'center', gap: 5 },
+          jersey(side.kit, p.jersey, size),
           line(p.name, {
-            maxWidth: nameWidth,
-            padding: '1px 8px',
-            borderRadius: 6,
-            backgroundColor: withAlpha('#ffffff', 0.92),
+            maxWidth: slot,
+            padding: `2px ${LABEL_PADDING / 2}px`,
+            borderRadius: 7,
+            backgroundColor: withAlpha('#ffffff', 0.94),
             fontFamily: fonts.display,
             fontWeight: 700,
-            fontSize: Math.round(size * 0.36),
+            fontSize: nameSize,
             color: palette.paper,
           }),
         ),
@@ -142,6 +143,29 @@ function placePlayers(side: LineupSide, W: number, H: number, baseSize: number):
     });
   });
   return nodes;
+}
+
+const LABEL_PADDING = 18;
+const LABEL_GAP = 10;
+
+/**
+ * Un solo tamaño de apellido para todo el equipo (tamaños dispares se ven desprolijos): el mayor
+ * con el que ninguna etiqueta pisa a su vecina de fila ni se sale de la cancha.
+ */
+function uniformNameSize(side: LineupSide, W: number, max: number, min: number): number {
+  const perPoint = (name: string) => estimateWidth(name, 1, 'display');
+  let size = max;
+  for (const row of side.rows) {
+    const spacing = W / (row.length + 1);
+    for (let j = 0; j + 1 < row.length; j++) {
+      const chars = (perPoint(row[j]!.name) + perPoint(row[j + 1]!.name)) / 2;
+      size = Math.min(size, (spacing - LABEL_PADDING - LABEL_GAP) / chars);
+    }
+    for (const p of [row[0], row[row.length - 1]]) {
+      if (p) size = Math.min(size, (2 * (spacing - LABEL_GAP) - LABEL_PADDING) / perPoint(p.name));
+    }
+  }
+  return Math.max(min, Math.floor(size));
 }
 
 // Silueta de camiseta (cuello redondo y mangas cortas) en una caja de 100 × 100.
@@ -152,13 +176,15 @@ function shirtSize(size: number): { width: number; height: number } {
   return { width: Math.round(size * 1.3), height: Math.round(size * 1.25) };
 }
 
-/** Camiseta con el color del club; el dorsal va encima con la tipografía de la marca. */
-function jersey(team: TeamVisual, number: string | null, size: number): VNode {
+/** Camiseta con los colores del partido; el dorsal va encima con la tipografía de la marca. */
+function jersey(kit: LineupKit, number: string | null, size: number): VNode {
   const { width, height } = shirtSize(size);
+  // Una camiseta clara (blanca, celeste) se perdería sobre el césped con borde blanco.
+  const outline = luminance(kit.fill) > 0.6 ? palette.muted : '#ffffff';
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${width}" height="${height}" preserveAspectRatio="none">` +
-    `<path d="${SHIRT_PATH}" fill="${team.color}" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>` +
-    `<path d="${COLLAR_PATH}" fill="none" stroke="${team.textColor}" stroke-width="3" stroke-linecap="round"/></svg>`;
+    `<path d="${SHIRT_PATH}" fill="${kit.fill}" stroke="${outline}" stroke-width="4" stroke-linejoin="round"/>` +
+    `<path d="${COLLAR_PATH}" fill="none" stroke="${kit.trim}" stroke-width="4" stroke-linecap="round"/></svg>`;
   return h(
     'div',
     { position: 'relative', width, height, flexShrink: 0 },
@@ -166,7 +192,7 @@ function jersey(team: TeamVisual, number: string | null, size: number): VNode {
     // Ambos en posición absoluta: así el número se pinta encima de la camiseta.
     h(
       'div',
-      { position: 'absolute', left: 0, top: Math.round(height * 0.32), width, justifyContent: 'center', fontFamily: fonts.display, fontWeight: 800, fontSize: Math.round(size * 0.5), lineHeight: 1, color: team.textColor },
+      { position: 'absolute', left: 0, top: Math.round(height * 0.31), width, justifyContent: 'center', fontFamily: fonts.display, fontWeight: 800, fontSize: Math.round(size * 0.52), lineHeight: 1, color: kit.number },
       number ?? '',
     ),
   );

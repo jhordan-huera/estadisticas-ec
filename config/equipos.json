@@ -1,5 +1,5 @@
 {
-  "_nota": "Clave = proveedor:id. Sobrescribe nombre, nombre corto y abreviatura del proveedor. 'alias' enlaza el mismo club en otros proveedores. 'color' y 'texto' definen la marca de color del equipo en las imágenes (se usa cuando no hay logos). 'hashtag' es opcional.",
+  "_nota": "Clave = proveedor:id. Sobrescribe nombre, nombre corto y abreviatura del proveedor. 'alias' enlaza el mismo club en otros proveedores. 'color' y 'texto' definen la marca de color del equipo en las imágenes (se usa cuando no hay logos). 'hashtag' es opcional. 'dt' es el director técnico actual (ninguna fuente lo informa: se actualiza a mano cuando cambia) y se usa en el texto de las alineaciones.",
   "espn:6017": {"nombre": "Aucas", "corto": "Aucas", "abrev": "AUC", "color": "#c8102e", "texto": "#ffc72c"},
   "espn:2686": {"nombre": "Barcelona SC", "corto": "Barcelona", "abrev": "BSC", "color": "#ffd100", "texto": "#111111"},
   "espn:4812": {"nombre": "Deportivo Cuenca", "corto": "Cuenca", "abrev": "CUE", "color": "#8e1b2b", "texto": "#ffffff"},
@@ -8,7 +8,7 @@
   "espn:11124": {"nombre": "Guayaquil City FC", "corto": "Guayaquil City", "abrev": "GCY", "color": "#5aaee8", "texto": "#0b1f4d"},
   "espn:17086": {"nombre": "Independiente del Valle", "corto": "Ind. del Valle", "abrev": "IDV", "color": "#0e1546", "texto": "#5ab4ff"},
   "espn:4816": {"nombre": "Liga de Quito", "corto": "Liga de Quito", "abrev": "LDU", "color": "#f4f4f2", "texto": "#1c1d5c", "alias": ["LDU Quito"]},
-  "espn:131702": {"nombre": "Leones", "corto": "Leones", "abrev": "LEO", "color": "#151515", "texto": "#e5383b"},
+  "espn:131702": {"nombre": "Leones", "corto": "Leones", "abrev": "LEO", "color": "#d10c29", "texto": "#ffffff"},
   "espn:21843": {"nombre": "Libertad", "corto": "Libertad", "abrev": "LIB", "color": "#f28c28", "texto": "#111111", "alias": ["Libertad FC"]},
   "espn:18439": {"nombre": "Macará", "corto": "Macará", "abrev": "MAC", "color": "#00a3e0", "texto": "#ffffff"},
   "espn:10307": {"nombre": "Manta FC", "corto": "Manta", "abrev": "MAN", "color": "#1f5fbf", "texto": "#ffffff"},
