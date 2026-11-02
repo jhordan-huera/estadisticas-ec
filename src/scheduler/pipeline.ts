@@ -26,6 +26,7 @@ import { writeCaption, type CopyContext } from '../copy/writer.ts';
 import { formats } from '../design/tokens.ts';
 import { createPublisher, publicUrlFor } from '../publish/factory.ts';
 import { PublishError } from '../publish/types.ts';
+import { lineupWatchNotices } from '../notify/lineup-watch.ts';
 import { createNotifiers, KIND_LABEL, notifyAll, type Notifier } from '../notify/notifier.ts';
 import { brandFrom, slidesFor } from '../render/index.ts';
 import { loadLogos, Renderer } from '../render/renderer.ts';
@@ -265,6 +266,14 @@ export async function publishQueue(app: AppContext, now: Date, notifiers: Notifi
         summary.stoppedBy = pe.code;
         break;
       }
+    }
+  }
+  // Seguimiento de alineaciones: solo en la cuenta real, para no avisar de simulaciones.
+  if (publisher.mode === 'instagram') {
+    try {
+      await lineupWatchNotices(app, now, notifiers);
+    } catch (err) {
+      logger.warn(`No se pudieron enviar los avisos de alineaciones: ${describeError(err)}`);
     }
   }
   return summary;

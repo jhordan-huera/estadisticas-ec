@@ -207,7 +207,7 @@ Además:
 
 Con el modo `automatico` manda la variable `DRY_RUN`: para pasar a simulación no hace falta tocar cron-job.org. Las copas (TheSportsDB) se sincronizan como mucho una vez por hora (`sincronizar --cada 60`), para respetar su límite de peticiones. La rama `estado` solo se sube cuando cambia algo relevante (comando `huella`), así una ejecución sin novedades no genera un commit.
 
-**Avisos (ntfy y/o Telegram).** Cada publicación real en Instagram envía un aviso con su enlace, y un fallo de publicación envía un aviso de prioridad alta. Cada canal se activa solo si están sus secretos:
+**Avisos (ntfy y/o Telegram).** Cada publicación real en Instagram envía un aviso con su enlace, y un fallo de publicación envía un aviso de prioridad alta. Además, en cada partido se avisa cuando se empieza a buscar las alineaciones (2 h antes) y, si ESPN no las publica antes de los 45 minutos de juego, que esta vez no habrá carrusel; cada uno sale una sola vez por partido. Cada canal se activa solo si están sus secretos:
 
 - **ntfy:** secreto `NTFY_TOPIC`, un nombre de tema difícil de adivinar, porque en ntfy.sh los temas son públicos. Suscríbete a ese tema desde la app ntfy. Opcionales: el secreto `NTFY_TOKEN` y la variable `NTFY_SERVER`, si usas un servidor propio.
 - **Telegram:** secretos `TELEGRAM_BOT_TOKEN` (créalo con @BotFather) y `TELEGRAM_CHAT_ID` (tu chat con el bot).

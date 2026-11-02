@@ -167,6 +167,7 @@ const commands: Record<string, Command> = {
       many<{ v: string }>(app.db, `SELECT provider || ':' || external_id || ':' || content_hash || ':' || COALESCE(round, '') || ':' || COALESCE(group_id, '') AS v FROM matches ORDER BY provider, external_id`),
       many<{ v: string }>(app.db, `SELECT source || ':' || code || ':' || entity_ref || ':' || (resolved_at IS NULL) AS v FROM data_issues ORDER BY source, code, entity_ref`),
       many<{ v: string }>(app.db, `SELECT match_id || ':' || team_id || ':' || COALESCE(formation, '') AS v FROM match_lineups ORDER BY match_id, team_id`),
+      many<{ v: string }>(app.db, `SELECT match_id || ':' || COALESCE(outcome, '') AS v FROM lineup_watch ORDER BY match_id`),
       // Hora (no minuto) de la última sincronización correcta: conserva el control de "--cada"
       // sin obligar a subir la rama en cada ejecución.
       many<{ v: string }>(app.db, `SELECT job || ':' || substr(MAX(finished_at), 1, 13) AS v FROM sync_runs WHERE ok = 1 GROUP BY job ORDER BY job`),
