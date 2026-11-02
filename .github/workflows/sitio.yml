@@ -3,11 +3,10 @@ name: Sitio
 # Panel web estático (solo lectura) publicado en GitHub Pages.
 
 on:
-  workflow_run:
-    workflows: [Publicar]
-    types: [completed]
+  # Cada 30 minutos (no tras cada publicación: con un disparador cada 10 minutos
+  # serían demasiados despliegues de Pages).
   schedule:
-    - cron: '45 */6 * * *'
+    - cron: '7,37 * * * *'
   workflow_dispatch: {}
 
 concurrency:

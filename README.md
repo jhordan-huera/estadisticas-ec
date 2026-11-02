@@ -178,7 +178,7 @@ Sin credenciales, el sistema sigue generando contenido y lo deja en cola. Si se 
 |---|---|---|
 | **CI** | push y pull request | Verificación de tipos y pruebas |
 | **Publicar** | cada hora (minuto 17) y manual | Ver el detalle debajo de la tabla |
-| **Sitio** | tras "Publicar", cada 6 h y manual | Genera el panel y lo despliega en GitHub Pages |
+| **Sitio** | cada 30 minutos y manual | Genera el panel y lo despliega en GitHub Pages |
 | **Diagnóstico de Instagram** | manual | Revisa credenciales |
 
 El workflow **Publicar** sigue estos pasos:
@@ -191,6 +191,18 @@ Además:
 - Se ejecuta **una sola vez a la vez** (control de concurrencia).
 - Usa caché de dependencias de npm.
 - Los secretos llegan solo como variables de entorno.
+
+**Ejecutar cada 10 minutos (cron-job.org).** Las ejecuciones programadas de GitHub son, como mucho, horarias y pueden retrasarse. Para publicar los resultados a los pocos minutos, un servicio externo puede lanzar el workflow con la API de GitHub:
+
+1. En GitHub crea un token *fine-grained* (*Settings → Developer settings → Personal access tokens → Fine-grained tokens*). Limítalo solo a este repositorio y dale el permiso **Actions: Read and write** y nada más.
+2. En [cron-job.org](https://console.cron-job.org) crea un trabajo cada 10 minutos con estos datos:
+   - **URL:** `https://api.github.com/repos/<usuario>/<repo>/actions/workflows/publicar.yml/dispatches`
+   - **Método:** `POST`
+   - **Cabeceras:** `Accept: application/vnd.github+json`, `Authorization: Bearer <token>`, `X-GitHub-Api-Version: 2022-11-28` y `Content-Type: application/json`
+   - **Cuerpo:** `{"ref":"main","inputs":{"modo":"automatico"}}`
+3. La prueba debe responder **HTTP 204**.
+
+Con el modo `automatico` manda la variable `DRY_RUN`: para pasar a simulación no hace falta tocar cron-job.org. Las copas (TheSportsDB) se sincronizan solo una vez por hora, para respetar su límite de peticiones.
 
 **La rama `estado`** contiene la base de datos SQLite y las imágenes de los últimos 30 días. Se reescribe en cada ejecución como un único commit, para que el repositorio no crezca con el historial de imágenes. No la edites a mano.
 

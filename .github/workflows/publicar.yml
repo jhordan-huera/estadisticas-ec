@@ -6,14 +6,15 @@ name: Publicar
 
 on:
   schedule:
-    # Cada hora, en el minuto 17 para evitar la congestión de la hora en punto.
+    # Cada hora, en el minuto 17 (respaldo: el disparador principal puede ser externo,
+    # p. ej. cron-job.org cada 10 minutos con modo "automatico").
     - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
       modo:
-        description: 'Modo de publicación'
+        description: 'Modo: automatico = según la variable DRY_RUN'
         type: choice
-        options: [simulacion, real]
+        options: [simulacion, real, automatico]
         default: simulacion
 
 # Una sola ejecución a la vez: la rama "estado" y la cola no admiten escrituras simultáneas.
@@ -33,7 +34,8 @@ jobs:
       MARCADOR_MEDIA: estado/media
       MARCADOR_STATE_DIR: estado
       IMAGE_BASE_URL: ${{ vars.IMAGE_BASE_URL || format('https://raw.githubusercontent.com/{0}/estado', github.repository) }}
-      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (inputs.modo == 'real' && 'false' || 'true') || vars.DRY_RUN || 'true' }}
+      # real → publica; simulacion → simula; automatico y ejecuciones programadas → variable DRY_RUN.
+      DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.modo == 'real' && 'false') || (github.event_name == 'workflow_dispatch' && inputs.modo == 'simulacion' && 'true') || vars.DRY_RUN || 'true' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -47,8 +49,19 @@ jobs:
       - name: Preparar la rama de estado
         run: scripts/estado.sh preparar
 
-      - name: Sincronizar datos
-        run: node src/cli/main.ts sincronizar
+      - name: Sincronizar la liga
+        run: node src/cli/main.ts sincronizar --competicion serie-a
+
+      # TheSportsDB tiene un límite de peticiones estricto y las copas cambian poco:
+      # se sincronizan una vez por hora y, si fallan, no detienen la publicación de la liga.
+      - name: Sincronizar copas (una vez por hora)
+        run: |
+          if [ "$(date -u +%-M)" -lt 10 ] || [ "${{ github.event_name }}" = "schedule" ]; then
+            node src/cli/main.ts sincronizar --competicion copa-ecuador || echo "::warning::No se pudo sincronizar la Copa Ecuador"
+            node src/cli/main.ts sincronizar --competicion supercopa || echo "::warning::No se pudo sincronizar la Supercopa"
+          else
+            echo "Copas: se sincronizan en la primera ejecución de cada hora"
+          fi
 
       - name: Planificar publicaciones
         run: node src/cli/main.ts planificar
