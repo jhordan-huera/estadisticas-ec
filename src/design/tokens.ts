@@ -1,19 +1,21 @@
 // Sistema de diseño de Estadísticas EC: paleta, tipografía, espaciado, rejilla y formatos.
-// Dirección visual: "marcador nocturno" — fondo tinta, cifras condensadas grandes y
-// un único acento lima tipo LED. Ningún elemento imita marcas de la liga ni de clubes.
+// Dirección visual: "estadio de noche", con los colores del logo — fondo negro azulado con
+// el brillo azul de los focos, cifras condensadas grandes y un único acento verde neón.
 
 export const palette = {
-  ink: '#0d1117',
-  inkRaised: '#151c26',
-  inkHigh: '#1d2632',
-  line: '#263140',
-  paper: '#f3f1ea',
-  muted: '#8d98a7',
-  faint: '#5d6878',
-  accent: '#c8f31d',
-  onAccent: '#0d1117',
-  win: '#c8f31d',
-  draw: '#8d98a7',
+  // Colores tomados del logo de la marca: negro azulado, verde neón y azul de estadio.
+  ink: '#060b10',
+  inkRaised: '#0d1620',
+  inkHigh: '#15212d',
+  line: '#1f2d3b',
+  paper: '#f4f7f5',
+  muted: '#8e9cab',
+  faint: '#5f6e7e',
+  accent: '#7cfb04',
+  onAccent: '#061003',
+  stadium: '#2768a4',
+  win: '#7cfb04',
+  draw: '#8e9cab',
   loss: '#ff5d5d',
   red: '#e5383b',
   yellow: '#f5c518',

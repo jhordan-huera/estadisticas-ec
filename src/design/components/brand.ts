@@ -1,12 +1,16 @@
 // Marco común de todas las piezas: cabecera de marca, título, cuerpo y pie legal.
 
-import { h, line, type Child, type VNode } from '../h.ts';
+import { withAlpha } from '../color.ts';
+import { h, img, line, type Child, type VNode } from '../h.ts';
 import { fonts, palette, space, type, type Format } from '../tokens.ts';
+import { pickLogoVariant, type LogoSet } from './team.ts';
 
 export interface BrandInfo {
   name: string;
   handle: string;
   disclaimer: string;
+  /** Logo de la marca (se muestra al pie de cada pieza). */
+  logo?: LogoSet;
 }
 
 export interface FrameProps {
@@ -44,7 +48,8 @@ export function frame(p: FrameProps): VNode {
       height: format.height,
       flexDirection: 'column',
       backgroundColor: palette.ink,
-      backgroundImage: `linear-gradient(180deg, ${palette.ink} 0%, #101722 100%)`,
+      // Brillo azul arriba, como los focos del estadio del logo, que se apaga hacia abajo.
+      backgroundImage: `radial-gradient(ellipse 90% 45% at 50% 0%, ${withAlpha(palette.stadium, 0.32)} 0%, ${withAlpha(palette.stadium, 0)} 100%), linear-gradient(180deg, ${palette.ink} 0%, #08111a 100%)`,
       color: palette.paper,
       fontFamily: fonts.text,
       padding: `${compact ? space(5) : space(6)}px ${format.margin}px ${space(4)}px`,
@@ -85,6 +90,8 @@ function title(text: string, accent: string | undefined, size: number): VNode {
   );
 }
 
+const FOOTER_LOGO = 60;
+
 function footer(brand: BrandInfo): VNode {
   return h(
     'div',
@@ -92,12 +99,17 @@ function footer(brand: BrandInfo): VNode {
       justifyContent: 'space-between',
       alignItems: 'center',
       borderTop: `1px solid ${palette.line}`,
-      paddingTop: space(2),
+      paddingTop: space(1.5),
       marginTop: space(2),
       fontSize: type.micro,
       color: palette.faint,
     },
-    line(brand.disclaimer, { maxWidth: 760 }),
-    line(brand.handle, { fontFamily: fonts.display, fontWeight: 700, fontSize: type.small, color: palette.muted }),
+    line(brand.disclaimer, { maxWidth: 640 }),
+    h(
+      'div',
+      { alignItems: 'center', gap: 14 },
+      line(brand.handle, { fontFamily: fonts.display, fontWeight: 700, fontSize: type.small, color: palette.muted }),
+      brand.logo ? img(pickLogoVariant(brand.logo, FOOTER_LOGO), { width: FOOTER_LOGO, height: FOOTER_LOGO }) : null,
+    ),
   );
 }

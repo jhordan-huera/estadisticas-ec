@@ -1,6 +1,8 @@
 import type { AppConfig } from '../core/config.ts';
 import type { AnyView } from '../content/views.ts';
 import type { BrandInfo } from '../design/components/brand.ts';
+import type { LogoSet } from '../design/components/team.ts';
+import { loadBrandLogo } from './renderer.ts';
 import type { VNode } from '../design/h.ts';
 import type { Format } from '../design/tokens.ts';
 import { fixturesTemplate } from './templates/fixtures.ts';
@@ -11,8 +13,11 @@ import { standingsTemplate } from './templates/standings.ts';
 import { summaryTemplate } from './templates/summary.ts';
 import { teamTemplate } from './templates/team.ts';
 
+const brandLogos = new Map<string, LogoSet | undefined>();
+
 export function brandFrom(config: AppConfig): BrandInfo {
-  return { name: config.file.marca.nombre, handle: config.file.marca.usuario, disclaimer: config.file.marca.pie };
+  if (!brandLogos.has(config.rootDir)) brandLogos.set(config.rootDir, loadBrandLogo(config.rootDir));
+  return { name: config.file.marca.nombre, handle: config.file.marca.usuario, disclaimer: config.file.marca.pie, logo: brandLogos.get(config.rootDir) };
 }
 
 export function templateFor(view: AnyView, format: Format, brand: BrandInfo): VNode {

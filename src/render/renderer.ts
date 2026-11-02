@@ -85,6 +85,15 @@ export function loadLogos(dir: string, enabled: boolean): Map<string, LogoSet> {
   return logos;
 }
 
+/** Logo de la marca (assets/brand/logo.png), en las mismas variantes de resolución. */
+export function loadBrandLogo(rootDir: string): LogoSet | undefined {
+  const dir = join(rootDir, 'assets/brand');
+  if (!existsSync(join(dir, 'logo.png'))) return undefined;
+  const logos = new Map<string, LogoSet>();
+  for (const [key, set] of loadLogos(dir, true)) logos.set(key, set);
+  return logos.get('LOGO');
+}
+
 /** Tamaño supuesto cuando no se puede leer del archivo (JPEG). */
 const DEFAULT_LOGO_SIZE = 500;
 const LOGO_MIN = 60;

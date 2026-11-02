@@ -7,7 +7,8 @@ export function contentWidth(format: Format): number {
 
 /** Alto disponible para el cuerpo dentro del marco (cabecera, título y pie descontados). */
 export function bodyHeight(format: Format): number {
-  return format.height <= 1080 ? 740 : 950;
+  // Descuenta la cabecera, el título y el pie con el logo de la marca.
+  return format.height <= 1080 ? 704 : 914;
 }
 
 export function isCompact(format: Format): boolean {
