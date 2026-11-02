@@ -25,6 +25,7 @@ import { writeCaption, type CopyContext } from '../copy/writer.ts';
 import { formats } from '../design/tokens.ts';
 import { createPublisher, publicUrlFor } from '../publish/factory.ts';
 import { PublishError } from '../publish/types.ts';
+import { createNotifiers, KIND_LABEL, notifyAll, type Notifier } from '../notify/notifier.ts';
 import { brandFrom, slidesFor } from '../render/index.ts';
 import { loadLogos, Renderer } from '../render/renderer.ts';
 import { loadSeason } from '../stats/load.ts';
@@ -202,7 +203,7 @@ export interface PublishSummary {
   stoppedBy?: string;
 }
 
-export async function publishQueue(app: AppContext, now: Date): Promise<PublishSummary> {
+export async function publishQueue(app: AppContext, now: Date, notifiers: Notifier[] = createNotifiers()): Promise<PublishSummary> {
   const { config, logger } = app;
   const queue = new PostQueue(app.db);
   queue.expire(iso(now));
@@ -232,11 +233,27 @@ export async function publishQueue(app: AppContext, now: Date): Promise<PublishS
       summary.published++;
       summary.remainingToday--;
       logger.info(`Publicada (${result.mode}): ${post.dedupe_key} → ${result.permalink ?? result.externalId}`);
+      // Solo se avisa de lo que sale de verdad en Instagram, no de las simulaciones.
+      if (result.mode === 'instagram') {
+        await notifyAll(
+          notifiers,
+          { title: `Publicado en Instagram: ${KIND_LABEL[post.kind] ?? post.kind}`, message: (post.caption ?? '').split('\n')[0] ?? '', url: result.permalink },
+          logger,
+        );
+      }
     } catch (err) {
       summary.failed++;
       const pe = err instanceof PublishError ? err : undefined;
       const status = queue.markFailed(post.id, describeError(err), Boolean(pe?.retryable && !pe.uncertain), 'publish');
       logger.error(`No se pudo publicar ${post.dedupe_key}: ${describeError(err)} → ${status}`);
+      if (publisher.mode === 'instagram') {
+        const retry = status === 'failed' ? 'No se reintentará: revisa la cola.' : 'Se reintentará en la próxima ejecución.';
+        await notifyAll(
+          notifiers,
+          { title: `Error al publicar: ${KIND_LABEL[post.kind] ?? post.kind}`, message: `${describeError(err)}\n${retry}`, priority: 'high' },
+          logger,
+        );
+      }
       if (pe?.fatal) {
         summary.stoppedBy = pe.code;
         break;

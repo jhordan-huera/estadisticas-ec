@@ -2,6 +2,7 @@
 
 import type { AppContext } from '../app.ts';
 import { toLocal } from '../core/time.ts';
+import { createNotifiers, notifyAll } from '../notify/notifier.ts';
 import { diagnoseInstagram } from '../publish/diagnostic.ts';
 import { cleanupMedia, planPosts, publishQueue, renderQueue } from '../scheduler/pipeline.ts';
 import { PostQueue, type PostStatus } from '../scheduler/queue.ts';
@@ -75,6 +76,22 @@ export const pipelineCommands = {
     const lines = await diagnoseInstagram(process.env, app.config.file.publicacion.instagram.version);
     for (const l of lines) out(`  ${l.ok ? '✓' : '✗'} ${l.label}: ${l.detail}`);
     return lines.every((l) => l.ok) ? 0 : 1;
+  },
+
+  /** Envía un aviso de prueba por los canales configurados (ntfy / Telegram). */
+  'avisos-prueba': async (app: AppContext) => {
+    const notifiers = createNotifiers();
+    if (notifiers.length === 0) {
+      out('No hay canales de aviso configurados (NTFY_TOPIC, o TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID).');
+      return 1;
+    }
+    const { sent, failed } = await notifyAll(
+      notifiers,
+      { title: 'Prueba de avisos', message: `Los avisos de ${app.config.file.marca.nombre} funcionan. Recibirás uno por cada publicación en Instagram y si algo falla.`, url: `https://www.instagram.com/${app.config.file.marca.usuario.replace(/^@/, '')}/` },
+      app.logger,
+    );
+    out(`Avisos enviados: ${sent.join(', ') || 'ninguno'}${failed.length ? ` · con error: ${failed.join(', ')}` : ''}`);
+    return failed.length ? 1 : 0;
   },
 
   limpiar: (app: AppContext, args: ParsedArgs) => {

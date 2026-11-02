@@ -44,6 +44,7 @@ Publicación (opcional: --ahora 2026-11-02T22:00:00Z para simular la hora):
   ciclo                          sincronizar + planificar + generar + publicar
   cola        [--todas]          Estado de la cola de publicaciones
   diagnostico                    Revisa las credenciales de Instagram (no publica nada)
+  avisos-prueba                  Envía un aviso de prueba por ntfy y/o Telegram
   limpiar     [--dias 30]        Borra imágenes antiguas de la carpeta de publicaciones
 `;
 

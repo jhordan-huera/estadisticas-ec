@@ -148,7 +148,7 @@ export function loadConfig(rootDir = process.cwd(), env: NodeJS.ProcessEnv = pro
   const tsdbApiKey = env.TSDB_API_KEY?.trim() || '123';
   // La clave gratuita pública ("123") no es secreta; una clave de pago sí.
   if (tsdbApiKey !== '123') registerSecret(tsdbApiKey);
-  for (const name of ['IG_ACCESS_TOKEN', 'FACEBOOK_ACCESS_TOKEN', 'GITHUB_TOKEN', 'GH_TOKEN']) registerSecret(env[name]);
+  for (const name of ['IG_ACCESS_TOKEN', 'FACEBOOK_ACCESS_TOKEN', 'GITHUB_TOKEN', 'GH_TOKEN', 'TELEGRAM_BOT_TOKEN', 'NTFY_TOKEN', 'NTFY_TOPIC']) registerSecret(env[name]);
 
   return {
     file,
