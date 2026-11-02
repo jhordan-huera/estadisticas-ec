@@ -6,6 +6,9 @@
 #   scripts/estado.sh preparar        → deja la rama en ./estado (o la crea vacía)
 #   scripts/estado.sh guardar "msg"   → sube el estado como un único commit (sin historial)
 #
+# Con HUELLA_BASE definida (huella al empezar la ejecución), no se sube nada si el estado
+# relevante no cambió: la base se restaura a la versión ya publicada.
+#
 # La rama se reescribe en cada guardado para que el repositorio no crezca con imágenes viejas.
 set -euo pipefail
 
@@ -29,6 +32,15 @@ case "${1:-}" in
 
   guardar)
     MSG="${2:-estado $(date -u +'%Y-%m-%d %H:%M') UTC}"
+    # Si el estado relevante no cambió (misma huella), se restaura la base ya publicada:
+    # así no se sube un commit solo porque cambiaron marcas de tiempo internas.
+    ACTUAL=""
+    if [ -n "${HUELLA_BASE:-}" ] && [ -f "$DIR/marcador.sqlite" ]; then
+      ACTUAL=$(node src/cli/main.ts huella)
+      if [ "$ACTUAL" = "$HUELLA_BASE" ] && git cat-file -e "refs/remotes/origin/$BRANCH:marcador.sqlite" 2>/dev/null; then
+        git -C "$DIR" checkout --quiet "refs/remotes/origin/$BRANCH" -- marcador.sqlite
+      fi
+    fi
     cd "$DIR"
     cat > README.md <<'TXT'
 # Rama de estado (generada automáticamente)
@@ -43,6 +55,8 @@ TXT
       echo "Sin cambios en el estado"
       exit 0
     fi
+    # La siguiente comparación de esta misma ejecución parte del estado recién subido.
+    if [ -n "${GITHUB_ENV:-}" ] && [ -n "$ACTUAL" ]; then echo "HUELLA_BASE=$ACTUAL" >> "$GITHUB_ENV"; fi
     COMMIT=$(git -c user.name="estadisticas-ec-bot" -c user.email="actions@users.noreply.github.com" commit-tree "$NEW_TREE" -m "$MSG")
     git push --quiet --force origin "$COMMIT:refs/heads/$BRANCH"
     git update-ref "refs/remotes/origin/$BRANCH" "$COMMIT"

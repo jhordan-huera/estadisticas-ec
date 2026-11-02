@@ -7,7 +7,7 @@ name: Publicar
 on:
   schedule:
     # Cada hora, en el minuto 17 (respaldo: el disparador principal puede ser externo,
-    # p. ej. cron-job.org cada 10 minutos con modo "automatico").
+    # p. ej. cron-job.org cada 5 minutos con modo "automatico").
     - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
@@ -47,21 +47,19 @@ jobs:
       - run: npm ci
 
       - name: Preparar la rama de estado
-        run: scripts/estado.sh preparar
+        run: |
+          scripts/estado.sh preparar
+          echo "HUELLA_BASE=$(node src/cli/main.ts huella)" >> "$GITHUB_ENV"
 
       - name: Sincronizar la liga
         run: node src/cli/main.ts sincronizar --competicion serie-a
 
       # TheSportsDB tiene un límite de peticiones estricto y las copas cambian poco:
-      # se sincronizan una vez por hora y, si fallan, no detienen la publicación de la liga.
-      - name: Sincronizar copas (una vez por hora)
+      # se sincronizan como mucho una vez por hora y, si fallan, no detienen la liga.
+      - name: Sincronizar copas (como mucho una vez por hora)
         run: |
-          if [ "$(date -u +%-M)" -lt 10 ] || [ "${{ github.event_name }}" = "schedule" ]; then
-            node src/cli/main.ts sincronizar --competicion copa-ecuador || echo "::warning::No se pudo sincronizar la Copa Ecuador"
-            node src/cli/main.ts sincronizar --competicion supercopa || echo "::warning::No se pudo sincronizar la Supercopa"
-          else
-            echo "Copas: se sincronizan en la primera ejecución de cada hora"
-          fi
+          node src/cli/main.ts sincronizar --competicion copa-ecuador --cada 60 || echo "::warning::No se pudo sincronizar la Copa Ecuador"
+          node src/cli/main.ts sincronizar --competicion supercopa --cada 60 || echo "::warning::No se pudo sincronizar la Supercopa"
 
       - name: Planificar publicaciones
         run: node src/cli/main.ts planificar

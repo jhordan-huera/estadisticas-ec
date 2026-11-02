@@ -195,14 +195,14 @@ Además:
 **Ejecutar cada 10 minutos (cron-job.org).** Las ejecuciones programadas de GitHub son, como mucho, horarias y pueden retrasarse. Para publicar los resultados a los pocos minutos, un servicio externo puede lanzar el workflow con la API de GitHub:
 
 1. En GitHub crea un token *fine-grained* (*Settings → Developer settings → Personal access tokens → Fine-grained tokens*). Limítalo solo a este repositorio y dale el permiso **Actions: Read and write** y nada más.
-2. En [cron-job.org](https://console.cron-job.org) crea un trabajo cada 10 minutos con estos datos:
+2. En [cron-job.org](https://console.cron-job.org) crea un trabajo cada 5 o 10 minutos con estos datos:
    - **URL:** `https://api.github.com/repos/<usuario>/<repo>/actions/workflows/publicar.yml/dispatches`
    - **Método:** `POST`
    - **Cabeceras:** `Accept: application/vnd.github+json`, `Authorization: Bearer <token>`, `X-GitHub-Api-Version: 2022-11-28` y `Content-Type: application/json`
    - **Cuerpo:** `{"ref":"main","inputs":{"modo":"automatico"}}`
 3. La prueba debe responder **HTTP 204**.
 
-Con el modo `automatico` manda la variable `DRY_RUN`: para pasar a simulación no hace falta tocar cron-job.org. Las copas (TheSportsDB) se sincronizan solo una vez por hora, para respetar su límite de peticiones.
+Con el modo `automatico` manda la variable `DRY_RUN`: para pasar a simulación no hace falta tocar cron-job.org. Las copas (TheSportsDB) se sincronizan como mucho una vez por hora (`sincronizar --cada 60`), para respetar su límite de peticiones. La rama `estado` solo se sube cuando cambia algo relevante (comando `huella`), así una ejecución sin novedades no genera un commit.
 
 **La rama `estado`** contiene la base de datos SQLite y las imágenes de los últimos 30 días. Se reescribe en cada ejecución como un único commit, para que el repositorio no crezca con el historial de imágenes. No la edites a mano.
 

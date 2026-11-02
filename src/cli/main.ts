@@ -2,6 +2,7 @@
 
 import { createApp, type AppContext } from '../app.ts';
 import { describeError } from '../core/errors.ts';
+import { sha256 } from '../core/text.ts';
 import { toLocal } from '../core/time.ts';
 import { many } from '../db/connection.ts';
 import { CompetitionsRepo } from '../db/repositories/competitions.ts';
@@ -17,11 +18,12 @@ const out = (line = '') => process.stdout.write(line + '\n');
 const HELP = `Estadísticas EC — comandos:
   migrar                         Aplica las migraciones pendientes de la base de datos
   sincronizar [--competicion c]  Descarga y guarda los datos (todas las competiciones por defecto)
-              [--temporada AAAA]
+              [--temporada AAAA] [--cada MIN]  (--cada: omite si ya se sincronizó con éxito hace menos de MIN minutos)
   estado      [--temporada AAAA] Resumen de lo guardado por competición y fase
   fecha       --numero N         Partidos de una fecha (jornada)
               [--fase 1] [--competicion serie-a]
   incidencias [--nivel info|warning|error] [--detalle]  Anomalías de datos abiertas
+  huella                         Huella del estado relevante (para no subir la rama "estado" sin cambios)
 
 Estadísticas (opcional: --competicion serie-a --temporada AAAA):
   tabla       [--general]        Tabla vigente (grupos o general)
@@ -58,7 +60,24 @@ const commands: Record<string, Command> = {
 
   sincronizar: async (app, args) => {
     const code = flagString(args, 'competicion');
-    const outcomes = await syncCompetitions(app, { codes: code ? [code] : undefined, season: flagInt(args, 'temporada') });
+    const every = flagInt(args, 'cada');
+    const season = flagInt(args, 'temporada') ?? app.config.file.temporada;
+    if (every !== undefined) {
+      const codes = code ? [code] : Object.keys(app.config.file.competiciones);
+      const recent = codes.every((c) => {
+        const last = many<{ finished_at: string }>(
+          app.db,
+          `SELECT finished_at FROM sync_runs WHERE job = :job AND ok = 1 ORDER BY finished_at DESC LIMIT 1`,
+          { job: `sincronizar:${c}:${season}` },
+        )[0];
+        return last !== undefined && Date.now() - Date.parse(last.finished_at) < every * 60_000;
+      });
+      if (recent) {
+        out(`Sin sincronizar ${codes.join(', ')}: la última sincronización correcta tiene menos de ${every} minutos.`);
+        return 0;
+      }
+    }
+    const outcomes = await syncCompetitions(app, { codes: code ? [code] : undefined, season });
     out('');
     for (const o of outcomes) {
       if (!o.ok || !o.summary) {
@@ -134,6 +153,22 @@ const commands: Record<string, Command> = {
       const score = r.hs !== null ? `${r.hs}-${r.as}` : 'vs';
       out(`  ${t.weekday.slice(0, 3)} ${t.date} ${t.time}  ${r.home.padStart(16)} ${score.padEnd(5)} ${r.away.padEnd(16)} ${r.status.padEnd(9)} ${r.grp ?? ''}  ${r.venue ?? ''}`);
     }
+    return 0;
+  },
+
+  // Huella del estado relevante (cola, huellas publicadas, partidos, incidencias abiertas),
+  // sin marcas de tiempo de cada ejecución: si no cambia, no hace falta subir la rama "estado".
+  huella: (app) => {
+    const parts = [
+      many<{ v: string }>(app.db, `SELECT id || ':' || status || ':' || attempts || ':' || COALESCE(external_id, '') || ':' || COALESCE(mode, '') AS v FROM posts ORDER BY id`),
+      many<{ v: string }>(app.db, `SELECT series || ':' || fingerprint AS v FROM content_snapshots ORDER BY series`),
+      many<{ v: string }>(app.db, `SELECT provider || ':' || external_id || ':' || content_hash || ':' || COALESCE(round, '') || ':' || COALESCE(group_id, '') AS v FROM matches ORDER BY provider, external_id`),
+      many<{ v: string }>(app.db, `SELECT source || ':' || code || ':' || entity_ref || ':' || (resolved_at IS NULL) AS v FROM data_issues ORDER BY source, code, entity_ref`),
+      // Hora (no minuto) de la última sincronización correcta: conserva el control de "--cada"
+      // sin obligar a subir la rama en cada ejecución.
+      many<{ v: string }>(app.db, `SELECT job || ':' || substr(MAX(finished_at), 1, 13) AS v FROM sync_runs WHERE ok = 1 GROUP BY job ORDER BY job`),
+    ];
+    out(sha256(parts.map((rows) => rows.map((r) => r.v).join('|')).join('#')));
     return 0;
   },
 
