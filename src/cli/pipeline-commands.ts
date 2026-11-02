@@ -4,7 +4,8 @@ import type { AppContext } from '../app.ts';
 import { toLocal } from '../core/time.ts';
 import { createNotifiers, notifyAll } from '../notify/notifier.ts';
 import { diagnoseInstagram } from '../publish/diagnostic.ts';
-import { cleanupMedia, planPosts, publishQueue, renderQueue } from '../scheduler/pipeline.ts';
+import { publicUrlFor } from '../publish/factory.ts';
+import { cleanupMedia, mediaToPublish, planPosts, publishQueue, renderQueue } from '../scheduler/pipeline.ts';
 import { PostQueue, type PostStatus } from '../scheduler/queue.ts';
 import { syncCompetitions } from '../sync/run.ts';
 import { flagInt, flagString, type ParsedArgs } from './args.ts';
@@ -85,11 +86,29 @@ export const pipelineCommands = {
       out('No hay canales de aviso configurados (NTFY_TOPIC, o TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID).');
       return 1;
     }
+    // Con las imágenes de la última publicación real, para ver el aviso tal como llegará.
+    const last = new PostQueue(app.db).list(['published'], 50).find((p) => p.mode === 'instagram' && p.media);
+    let images: { path: string; url?: string }[] = [];
+    let url = `https://www.instagram.com/${app.config.file.marca.usuario.replace(/^@/, '')}/`;
+    if (last) {
+      try {
+        images = mediaToPublish(last, app.config.file.publicacion.formato).map((path) => ({ path, url: publicUrlFor(app.config, path) }));
+        url = last.permalink ?? url;
+      } catch {
+        images = [];
+      }
+    }
     const { sent, failed } = await notifyAll(
       notifiers,
-      { title: 'Prueba de avisos', message: `Los avisos de ${app.config.file.marca.nombre} funcionan. Recibirás uno por cada publicación en Instagram y si algo falla.`, url: `https://www.instagram.com/${app.config.file.marca.usuario.replace(/^@/, '')}/` },
+      {
+        title: 'Prueba de avisos',
+        message: `Los avisos de ${app.config.file.marca.nombre} funcionan. Recibirás uno por cada publicación en Instagram${images.length ? ', con sus imágenes,' : ''} y si algo falla.`,
+        url,
+        images,
+      },
       app.logger,
     );
+    out(`Imágenes adjuntas: ${images.length}`);
     out(`Avisos enviados: ${sent.join(', ') || 'ninguno'}${failed.length ? ` · con error: ${failed.join(', ')}` : ''}`);
     return failed.length ? 1 : 0;
   },

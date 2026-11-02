@@ -222,12 +222,13 @@ export async function publishQueue(app: AppContext, now: Date, notifiers: Notifi
   for (const post of queue.dueForPublishing(iso(now), remaining, publisher.mode)) {
     try {
       const files = mediaToPublish(post, config.file.publicacion.formato);
+      const images = files.map((path) => ({ path, url: publicUrlFor(config, path) }));
       const result = await publisher.publish({
         postId: post.id,
         kind: post.kind,
         caption: post.caption ?? '',
         altText: post.alt_text ?? undefined,
-        images: files.map((path) => ({ path, url: publicUrlFor(config, path) })),
+        images,
       });
       queue.markPublished(post.id, result);
       summary.published++;
@@ -237,7 +238,7 @@ export async function publishQueue(app: AppContext, now: Date, notifiers: Notifi
       if (result.mode === 'instagram') {
         await notifyAll(
           notifiers,
-          { title: `Publicado en Instagram: ${KIND_LABEL[post.kind] ?? post.kind}`, message: (post.caption ?? '').split('\n')[0] ?? '', url: result.permalink },
+          { title: `Publicado en Instagram: ${KIND_LABEL[post.kind] ?? post.kind}`, message: (post.caption ?? '').split('\n')[0] ?? '', url: result.permalink, images },
           logger,
         );
       }
@@ -264,7 +265,7 @@ export async function publishQueue(app: AppContext, now: Date, notifiers: Notifi
 }
 
 /** Imágenes a publicar en el formato elegido, en orden de carrusel. */
-function mediaToPublish(post: PostRow, format: string): string[] {
+export function mediaToPublish(post: PostRow, format: string): string[] {
   const media = JSON.parse(post.media ?? '[]') as MediaFile[];
   const chosen = media.filter((m) => m.format === format);
   const files = (chosen.length ? chosen : media.filter((m) => m.format === media[0]?.format))
