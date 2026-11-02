@@ -144,12 +144,12 @@ function badge(team: TeamVisual): string {
 }
 
 const CSS = `
-:root{--ink:${palette.ink};--raised:${palette.inkRaised};--high:${palette.inkHigh};--line:${palette.line};--paper:${palette.paper};--muted:${palette.muted};--accent:${palette.accent};--loss:${palette.loss}}
+:root{--win:${palette.win};--ink:${palette.ink};--raised:${palette.inkRaised};--high:${palette.inkHigh};--line:${palette.line};--paper:${palette.paper};--muted:${palette.muted};--accent:${palette.accent};--loss:${palette.loss}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .top{border-top:6px solid var(--accent);padding:24px 16px 8px;max-width:980px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;justify-content:space-between}
 .brand{font-weight:800;letter-spacing:.04em;font-size:22px;display:flex;gap:8px;align-items:center}
-.brand b{background:var(--accent);color:var(--ink);padding:0 8px;border-radius:5px}
+.brand b{background:var(--accent);color:#fff;padding:0 8px;border-radius:5px}
 .meta{color:var(--muted);font-size:14px}
 .jump{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
 .jump a{color:var(--accent);text-decoration:none;font-weight:600}
@@ -164,10 +164,10 @@ th,td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--line);whi
 th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 tr:last-child td{border-bottom:0}
 .l{text-align:left}.strong{font-weight:700}
-tr.lead td{background:rgba(200,243,29,.08)}
+tr.lead td{background:rgba(10,120,219,.08)}
 .badge{display:inline-block;min-width:40px;padding:2px 6px;border-radius:6px;font-size:11px;font-weight:800;text-align:center;letter-spacing:.04em;vertical-align:middle}
 .form i{display:inline-block;width:20px;height:20px;line-height:20px;margin-right:3px;border-radius:5px;font-style:normal;font-size:11px;font-weight:800;text-align:center;background:var(--high)}
-.form i.W{background:var(--accent);color:var(--ink)}.form i.L{background:var(--loss);color:var(--ink)}
+.form i.W{background:var(--win);color:#fff}.form i.L{background:var(--loss);color:#fff}
 .matches{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .matches li{display:grid;grid-template-columns:72px 1fr 72px 1fr;gap:8px;align-items:center;background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
 .matches .when{color:var(--muted);font-size:13px}.matches .team{font-weight:600}.matches .team.h{text-align:right}

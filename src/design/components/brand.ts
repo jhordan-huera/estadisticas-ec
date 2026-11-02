@@ -48,8 +48,8 @@ export function frame(p: FrameProps): VNode {
       height: format.height,
       flexDirection: 'column',
       backgroundColor: palette.ink,
-      // Brillo azul arriba, como los focos del estadio del logo, que se apaga hacia abajo.
-      backgroundImage: `radial-gradient(ellipse 90% 45% at 50% 0%, ${withAlpha(palette.stadium, 0.32)} 0%, ${withAlpha(palette.stadium, 0)} 100%), linear-gradient(180deg, ${palette.ink} 0%, #08111a 100%)`,
+      // Brillo azul suave arriba (el anillo del logo) que se desvanece hacia abajo.
+      backgroundImage: `radial-gradient(ellipse 90% 45% at 50% 0%, ${withAlpha(palette.stadium, 0.16)} 0%, ${withAlpha(palette.stadium, 0)} 100%), linear-gradient(180deg, ${palette.ink} 0%, #e8eff8 100%)`,
       color: palette.paper,
       fontFamily: fonts.text,
       padding: `${compact ? space(5) : space(6)}px ${format.margin}px ${space(4)}px`,

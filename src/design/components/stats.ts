@@ -10,7 +10,7 @@ export type Tone = 'accent' | 'muted' | 'loss' | 'outline';
 export function chip(text: string, tone: Tone = 'muted', size: number = type.small): VNode {
   const styles: Record<Tone, { bg: string; fg: string; border: string }> = {
     accent: { bg: palette.accent, fg: palette.onAccent, border: palette.accent },
-    muted: { bg: palette.inkHigh, fg: palette.paper, border: palette.inkHigh },
+    muted: { bg: palette.inkHigh, fg: palette.paper, border: palette.line },
     loss: { bg: withAlpha(palette.loss, 0.16), fg: palette.loss, border: withAlpha(palette.loss, 0.5) },
     outline: { bg: 'transparent', fg: palette.muted, border: palette.line },
   };
@@ -46,7 +46,7 @@ export function formDots(outcomes: Outcome[], size = 30): VNode {
           height: size,
           borderRadius: Math.round(size * 0.25),
           backgroundColor: o === 'W' ? palette.win : o === 'L' ? withAlpha(palette.loss, 0.9) : palette.inkHigh,
-          color: o === 'W' ? palette.onAccent : palette.paper,
+          color: o === 'D' ? palette.paper : '#ffffff',
           border: o === 'D' ? `2px solid ${palette.line}` : 'none',
           alignItems: 'center',
           justifyContent: 'center',

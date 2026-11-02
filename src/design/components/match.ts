@@ -1,5 +1,6 @@
 // Tarjeta de partido en una fila: local · centro (hora o marcador) · visitante.
 
+import { withAlpha } from '../color.ts';
 import { h, line, type VNode } from '../h.ts';
 import { fonts, palette, radius } from '../tokens.ts';
 import { teamLabel, type TeamVisual } from './team.ts';
@@ -58,7 +59,7 @@ export function matchRow(p: MatchRowProps): VNode {
       alignItems: 'center',
       padding: '0 24px',
       borderRadius: radius.md,
-      backgroundColor: p.highlight ? '#1b2530' : palette.inkRaised,
+      backgroundColor: p.highlight ? withAlpha(palette.accent, 0.07) : palette.inkRaised,
       border: `1px solid ${p.highlight ? palette.accent : palette.line}`,
     },
     p.lead

@@ -43,7 +43,7 @@ export function teamTemplate(view: TeamStatsView, format: Format, brand: BrandIn
           justifyContent: 'center',
           borderRadius: 16,
           backgroundColor: e.outcome === 'W' ? palette.win : e.outcome === 'L' ? withAlpha(palette.loss, 0.85) : palette.inkHigh,
-          color: e.outcome === 'W' ? palette.onAccent : palette.paper,
+          color: e.outcome === 'D' ? palette.paper : '#ffffff',
           gap: 4,
         },
         h('div', { fontFamily: fonts.display, fontWeight: 800, fontSize: compact ? 40 : 48, lineHeight: 1 }, `${e.goalsFor}-${e.goalsAgainst}`),

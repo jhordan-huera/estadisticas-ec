@@ -1,22 +1,24 @@
 // Sistema de diseño de Estadísticas EC: paleta, tipografía, espaciado, rejilla y formatos.
-// Dirección visual: "estadio de noche", con los colores del logo — fondo negro azulado con
-// el brillo azul de los focos, cifras condensadas grandes y un único acento verde neón.
+// Dirección visual: tema claro con los colores del logo — fondo claro azulado, texto azul
+// marino, cifras condensadas grandes y un único acento azul.
 
 export const palette = {
-  // Colores tomados del logo de la marca: negro azulado, verde neón y azul de estadio.
-  ink: '#060b10',
-  inkRaised: '#0d1620',
-  inkHigh: '#15212d',
-  line: '#1f2d3b',
-  paper: '#f4f7f5',
-  muted: '#8e9cab',
-  faint: '#5f6e7e',
-  accent: '#7cfb04',
-  onAccent: '#061003',
-  stadium: '#2768a4',
-  win: '#7cfb04',
-  draw: '#8e9cab',
-  loss: '#ff5d5d',
+  // Tema claro con los colores del logo. Por compatibilidad, "ink" es el fondo y "paper" el texto.
+  ink: '#f3f7fc',
+  inkRaised: '#ffffff',
+  inkHigh: '#e6eef8',
+  line: '#d5e0ee',
+  paper: '#0b1a33',
+  muted: '#566a85',
+  faint: '#8a9bb2',
+  // Azul del logo, un punto más oscuro para que el texto pequeño se lea bien sobre fondo claro.
+  accent: '#0a78db',
+  onAccent: '#ffffff',
+  /** Azul vivo del anillo del logo: brillos y detalles, no texto. */
+  stadium: '#0a97f7',
+  win: '#1a9e4b',
+  draw: '#94a3b8',
+  loss: '#e5484d',
   red: '#e5383b',
   yellow: '#f5c518',
   neutralTeam: '#3a4655',
