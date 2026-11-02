@@ -100,3 +100,15 @@ export interface EspnStandings {
   children?: EspnStandingsGroup[];
   standings?: { season?: number; seasonType?: number; entries: EspnStandingEntry[] };
 }
+
+export interface EspnRosterEntry {
+  starter?: boolean;
+  jersey?: string;
+  formationPlace?: string | number;
+  position?: { abbreviation?: string; name?: string };
+  athlete: { id: string; displayName: string; shortName?: string; lastName?: string };
+}
+
+export interface EspnSummary {
+  rosters?: { homeAway?: string; formation?: string; team: { id: string }; roster?: EspnRosterEntry[] }[];
+}

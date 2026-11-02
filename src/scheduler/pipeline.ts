@@ -13,6 +13,7 @@ import { localToday } from '../core/time.ts';
 import {
   fixturesView,
   headToHeadView,
+  lineupsView,
   resultView,
   scorersView,
   standingsView,
@@ -179,6 +180,10 @@ export function buildView(ctx: ViewContext, kind: PostKind, subject: Subject): A
     case 'duelo': {
       const m = matchOf(subject);
       return headToHeadView(ctx, m, m.round !== null ? findMatchday(days, m.stageId, m.round) : undefined);
+    }
+    case 'alineaciones': {
+      const m = matchOf(subject);
+      return lineupsView(ctx, m, m.round !== null ? findMatchday(days, m.stageId, m.round) : undefined);
     }
     case 'cartelera':
       return fixturesView(ctx, dayOf(subject));

@@ -5,6 +5,7 @@ import type { AppContext } from '../app.ts';
 import { describeError } from '../core/errors.ts';
 import { nowIso, run } from '../db/connection.ts';
 import { ingestSnapshot, type IngestSummary } from './ingest.ts';
+import { syncLineups } from './lineups.ts';
 
 export interface SyncOutcome {
   code: string;
@@ -31,6 +32,9 @@ export async function syncCompetitions(app: AppContext, options: { codes?: strin
     try {
       const snapshot = await app.providers().get(competition.proveedor).fetchSeason({ competitionCode: code, competition, season });
       const summary = ingestSnapshot(db, snapshot, { competition, teamOverrides: config.teams, logger: logger.child(code), runStartedAt: startedAt });
+      // Alineaciones de los partidos que empiezan pronto (solo proveedores que las ofrecen).
+      const lineups = await syncLineups(app, code, { season });
+      if (lineups.checked) logger.info(`Alineaciones ${code}: consultados ${lineups.checked}, guardados ${lineups.stored}`);
       run(db, 'UPDATE sync_runs SET finished_at = :t, ok = 1, summary = :s WHERE id = :id', { t: nowIso(), s: JSON.stringify(summary), id: runId });
       outcomes.push({ code, ok: true, summary });
     } catch (err) {

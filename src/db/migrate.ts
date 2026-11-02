@@ -42,9 +42,17 @@ export function migrate(db: Db, logger: Logger, dir = MIGRATIONS_DIR): number[] 
       }
       continue;
     }
+    // Recrear una tabla (p. ej. para cambiar un CHECK) exige desactivar las claves foráneas
+    // fuera de la transacción; la migración lo pide con un comentario y se verifica al final.
+    const foreignKeysOff = /^--\s*requiere:\s*foreign_keys=OFF/m.test(sql);
+    if (foreignKeysOff) db.exec('PRAGMA foreign_keys = OFF');
     db.exec('BEGIN IMMEDIATE');
     try {
       db.exec(sql);
+      if (foreignKeysOff) {
+        const broken = many<Record<string, unknown>>(db, 'PRAGMA foreign_key_check');
+        if (broken.length) throw new Error(`${broken.length} referencias rotas tras la migración`);
+      }
       run(db, 'INSERT INTO schema_migrations (version, name, checksum, applied_at) VALUES (:v, :n, :c, :t)', {
         v: version,
         n: file,
@@ -55,6 +63,8 @@ export function migrate(db: Db, logger: Logger, dir = MIGRATIONS_DIR): number[] 
     } catch (err) {
       db.exec('ROLLBACK');
       throw new AppError('MIGRATION_FAILED', `Falló la migración ${file}`, { error: String(err) }, { cause: err });
+    } finally {
+      if (foreignKeysOff) db.exec('PRAGMA foreign_keys = ON');
     }
     logger.info(`Migración aplicada: ${file}`);
     newlyApplied.push(version);

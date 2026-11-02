@@ -34,6 +34,7 @@ export interface Candidate {
 
 export const PRIORITY: Record<PostKind, number> = {
   resultado: 10,
+  alineaciones: 12,
   cartelera: 15,
   resumen: 20,
   tabla: 30,
@@ -181,10 +182,20 @@ export function planCandidates(input: PlannerInput): Candidate[] {
     }
   }
 
-  // Horario de publicación: nada sale de madrugada salvo los resultados, que son noticia del momento.
+  // Alineaciones confirmadas → en cuanto ambas están completas; ya no sirven a los 45' de juego.
+  if (kinds.has('alineaciones')) {
+    for (const m of leagueMatches(ctx.data)) {
+      if (m.status !== 'scheduled' && m.status !== 'live') continue;
+      const expiresAt = iso(new Date(Date.parse(m.kickoffUtc) + LINEUPS_VALID_MINUTES * 60_000));
+      if (expiresAt <= nowIso || !hasCompleteLineups(ctx.data.lineups.get(m.id))) continue;
+      out.push({ ...base('alineaciones'), dedupeKey: `alineaciones:${code}:${m.id}`, subject: { matchId: m.id }, expiresAt, reason: 'Alineaciones confirmadas' });
+    }
+  }
+
+  // Horario de publicación: nada sale de madrugada salvo lo que es noticia del momento.
   const hours = { ...DEFAULT_HOURS, ...input.config.horario };
   for (const c of out) {
-    if (c.kind === 'resultado' || c.kind === 'duelo') continue; // las previas ya vienen ajustadas
+    if (c.kind === 'resultado' || c.kind === 'alineaciones' || c.kind === 'duelo') continue; // las previas ya vienen ajustadas
     c.scheduledFor = withinLocalHours(c.scheduledFor, hours.desde, hours.hasta, ctx.timeZone);
   }
 
@@ -192,6 +203,11 @@ export function planCandidates(input: PlannerInput): Candidate[] {
 }
 
 const DEFAULT_HOURS = { desde: '08:00', hasta: '23:00' };
+const LINEUPS_VALID_MINUTES = 45;
+
+function hasCompleteLineups(lineups: { players: { starter: boolean }[] }[] | undefined): boolean {
+  return lineups?.length === 2 && lineups.every((l) => l.players.filter((p) => p.starter).length >= 11);
+}
 const DEFAULT_CLOSING_DELAYS = { resumenMinutos: 60, goleadoresMinutos: 120, equipoHora: '10:00' };
 
 /** Próxima vez que el reloj local marque `time` (hoy si aún no pasó, si no mañana). */

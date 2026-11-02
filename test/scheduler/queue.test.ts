@@ -46,6 +46,11 @@ describe('cola de publicaciones', () => {
     assert.deepEqual(pending.map((p) => p.dedupe_key), ['tabla:v2']);
   });
 
+  it('acepta las alineaciones como tipo de publicación', () => {
+    assert.equal(queue.enqueue(candidate({ kind: 'alineaciones', dedupeKey: 'alineaciones:prueba:1', priority: 12 })).inserted, true);
+    assert.deepEqual(queue.toRender('2026-03-10T00:00:00Z').map((p) => p.kind), ['alineaciones']);
+  });
+
   it('vence lo que ya no tiene sentido publicar', () => {
     queue.enqueue(candidate({ kind: 'duelo', dedupeKey: 'duelo:1', expiresAt: '2026-03-09T20:00:00Z' }));
     assert.equal(queue.expire('2026-03-09T21:00:00Z'), 1);

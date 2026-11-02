@@ -108,6 +108,29 @@ export interface SeasonSnapshot {
   issues: ProviderIssue[];
 }
 
+/** Alineación de un equipo en un partido. */
+export interface ProviderLineup {
+  teamExternalId: string;
+  /** "4-2-3-1" (puede faltar). */
+  formation: string | null;
+  players: {
+    externalId: string;
+    name: string;
+    shortName: string;
+    jersey: string | null;
+    /** Abreviatura de la posición del proveedor: "G", "CD-L", "RB", "AM-R", "F"… */
+    position: string | null;
+    /** Lugar en el esquema (1 = arquero), si el proveedor lo da. */
+    formationPlace: number | null;
+    starter: boolean;
+  }[];
+}
+
+export interface LineupRequest {
+  competition: CompetitionConfig;
+  matchExternalId: string;
+}
+
 export interface SeasonRequest {
   competitionCode: string;
   competition: CompetitionConfig;
@@ -117,4 +140,6 @@ export interface SeasonRequest {
 export interface DataProvider {
   readonly id: string;
   fetchSeason(request: SeasonRequest): Promise<SeasonSnapshot>;
+  /** Alineaciones de un partido; lista vacía si aún no se publicaron. Opcional por proveedor. */
+  fetchLineups?(request: LineupRequest): Promise<ProviderLineup[]>;
 }

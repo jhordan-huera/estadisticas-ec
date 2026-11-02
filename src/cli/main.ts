@@ -34,7 +34,7 @@ Estadísticas (opcional: --competicion serie-a --temporada AAAA):
   verificar                      Contrasta nuestra tabla con la del proveedor
 
 Diseño:
-  muestras    [--formato vertical|cuadrado] [--equipo LDU] [--logos]  Genera las 7 piezas con datos reales en out/muestras
+  muestras    [--formato vertical|cuadrado] [--equipo LDU] [--logos]  Genera las 8 piezas con datos reales en out/muestras
   sitio       [--salida out/sitio]  Genera el panel web estático (index.html + datos.json)
 
 Publicación (opcional: --ahora 2026-11-02T22:00:00Z para simular la hora):
@@ -43,6 +43,7 @@ Publicación (opcional: --ahora 2026-11-02T22:00:00Z para simular la hora):
   publicar                       Publica lo generado (simulación salvo DRY_RUN=false)
   ciclo                          sincronizar + planificar + generar + publicar
   cola        [--todas]          Estado de la cola de publicaciones
+  alineaciones [--partido ID]    Consulta y guarda alineaciones (por defecto, partidos de las próximas horas)
   diagnostico                    Revisa las credenciales de Instagram (no publica nada)
   avisos-prueba                  Envía un aviso de prueba por ntfy y/o Telegram
   limpiar     [--dias 30]        Borra imágenes antiguas de la carpeta de publicaciones
@@ -165,6 +166,7 @@ const commands: Record<string, Command> = {
       many<{ v: string }>(app.db, `SELECT series || ':' || fingerprint AS v FROM content_snapshots ORDER BY series`),
       many<{ v: string }>(app.db, `SELECT provider || ':' || external_id || ':' || content_hash || ':' || COALESCE(round, '') || ':' || COALESCE(group_id, '') AS v FROM matches ORDER BY provider, external_id`),
       many<{ v: string }>(app.db, `SELECT source || ':' || code || ':' || entity_ref || ':' || (resolved_at IS NULL) AS v FROM data_issues ORDER BY source, code, entity_ref`),
+      many<{ v: string }>(app.db, `SELECT match_id || ':' || team_id || ':' || COALESCE(formation, '') AS v FROM match_lineups ORDER BY match_id, team_id`),
       // Hora (no minuto) de la última sincronización correcta: conserva el control de "--cada"
       // sin obligar a subir la rama en cada ejecución.
       many<{ v: string }>(app.db, `SELECT job || ':' || substr(MAX(finished_at), 1, 13) AS v FROM sync_runs WHERE ok = 1 GROUP BY job ORDER BY job`),

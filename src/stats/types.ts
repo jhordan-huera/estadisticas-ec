@@ -68,6 +68,21 @@ export interface PointAdjustment {
   effectiveFrom: string;
 }
 
+export interface StatLineupPlayer {
+  playerId: number;
+  name: string;
+  jersey: string | null;
+  position: string | null;
+  formationPlace: number | null;
+  starter: boolean;
+}
+
+export interface StatLineup {
+  teamId: number;
+  formation: string | null;
+  players: StatLineupPlayer[];
+}
+
 export interface SeasonData {
   competitionCode: string;
   competitionName: string;
@@ -79,6 +94,8 @@ export interface SeasonData {
   matches: StatMatch[];
   events: StatEvent[];
   adjustments: PointAdjustment[];
+  /** Alineaciones guardadas, por partido. */
+  lineups: Map<number, StatLineup[]>;
 }
 
 export type Outcome = 'W' | 'D' | 'L';

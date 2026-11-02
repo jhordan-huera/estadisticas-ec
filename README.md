@@ -1,6 +1,6 @@
 # Estadísticas EC
 
-Generador automático de **imágenes y textos para redes sociales** sobre toda la Serie A de Ecuador: cartelera, resultados, resumen de cada fecha, tabla de posiciones, goleadores, estadísticas por equipo y previas con duelo directo. Calcula sus propias estadísticas acumuladas a partir de los datos de cada partido.
+Generador automático de **imágenes y textos para redes sociales** sobre toda la Serie A de Ecuador: cartelera, resultados, resumen de cada fecha, tabla de posiciones, goleadores, estadísticas por equipo, previas con duelo directo y alineaciones confirmadas. Calcula sus propias estadísticas acumuladas a partir de los datos de cada partido.
 
 > **Aviso legal.** Estadísticas EC es un proyecto independiente, **no afiliado a la LigaPro ni a ningún club**. No usa sus nombres comerciales ni sus logos como marca propia. Identifica a los equipos con su nombre, una abreviatura, un color y, si está activado, su escudo. Cada imagen y cada texto llevan el aviso *"No afiliados a la LigaPro ni a los clubes"* (configurable en `marca.pie`). Los datos provienen de fuentes públicas de terceros (ESPN y TheSportsDB) y pueden contener errores u omisiones.
 
@@ -17,8 +17,9 @@ Generador automático de **imágenes y textos para redes sociales** sobre toda l
 | Goleadores (top 10) | 2 h después de completarse la fecha, solo si cambió | Acumulado gol a gol; los goles sin autor se informan aparte |
 | Radiografía de equipo | Al día siguiente del cierre de la fecha a las 10:00, del equipo con la racha más notable | Últimos 5, goles a favor y en contra, local/visita, vallas invictas |
 | Previa (carrusel de 2–3 imágenes) | 24 h antes de cada partido, escalonadas cada 45 min si coinciden | 1) La previa: puesto, balance, últimos 5, racha y rendimiento local/visita · 2) Cara a cara en números: comparativa de la temporada y goleador de cada equipo · 3) Duelos del año con goleadores (si ya se enfrentaron) |
+| Alineaciones confirmadas (carrusel de 2 imágenes) | En cuanto ESPN publica los dos onces (se consultan desde 2 h antes del inicio); vencen a los 45 min de juego y se publican aunque sea fuera del horario | 1) Local · 2) Visitante: los 11 titulares sobre la cancha según su formación, con dorsal y apellido, y la lista de suplentes |
 
-Cada pieza se genera en **1080×1350** (vertical, la que se publica) y **1080×1080** (cuadrada). La previa se publica como **carrusel**: Instagram la cuenta como una sola publicación, así que no consume el límite diario por triplicado. Los textos se redactan con **plantillas propias y reglas por situación** (goleada, remontada, empate sin goles, líder nuevo, rachas…), con variantes elegidas de forma determinista. **No se usa inteligencia artificial.**
+Cada pieza se genera en **1080×1350** (vertical, la que se publica) y **1080×1080** (cuadrada). La previa y las alineaciones se publican como **carrusel**: Instagram cuenta cada uno como una sola publicación, así que no consumen el límite diario por cada imagen. Los textos se redactan con **plantillas propias y reglas por situación** (goleada, remontada, empate sin goles, líder nuevo, rachas…), con variantes elegidas de forma determinista. **No se usa inteligencia artificial.**
 
 ## Requisitos
 
@@ -51,13 +52,14 @@ Todos se ejecutan con `npm run cli -- <comando>` (o `node src/cli/main.ts <coman
 | `duelo --local LDU --visita IDV` | Historial de la temporada entre dos equipos |
 | `resumen [--fase 2 --numero 5]` | Resumen de una fecha (por defecto, la última completa) |
 | `verificar` | Contrasta nuestra tabla con la que publica ESPN |
-| `muestras [--formato vertical\|cuadrado] [--logos]` | Genera las 7 piezas con datos reales (con `--logos`, en `out/muestras-con-logos/`) |
+| `muestras [--formato vertical\|cuadrado] [--logos]` | Genera las 8 piezas con datos reales (con `--logos`, en `out/muestras-con-logos/`) |
 | `sitio [--salida out/sitio]` | Genera el panel web estático |
 | `planificar` | Decide qué publicar y lo encola (sin duplicados) |
 | `generar` | Dibuja imagen y texto de lo pendiente |
 | `publicar` | Publica lo generado (en **simulación** salvo `DRY_RUN=false`) |
 | `ciclo` | `sincronizar` + `planificar` + `generar` + `publicar` |
 | `cola [--todas]` | Estado de la cola de publicaciones |
+| `alineaciones [--partido ID]` | Consulta y guarda las alineaciones de los partidos próximos (o de uno puntual) |
 | `diagnostico` | Revisa las credenciales de Instagram (no publica nada) |
 | `limpiar [--dias 30]` | Borra imágenes antiguas |
 

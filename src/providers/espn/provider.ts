@@ -5,9 +5,9 @@ import type { EspnCompetitionConfig } from '../../core/config.ts';
 import { AppError } from '../../core/errors.ts';
 import type { HttpClient } from '../../core/http/client.ts';
 import type { Logger } from '../../core/logger.ts';
-import type { DataProvider, ProviderIssue, SeasonRequest, SeasonSnapshot } from '../types.ts';
-import { mapEspnSeason } from './mapper.ts';
-import type { EspnRefList, EspnScoreboard, EspnSeasonType, EspnStandings } from './raw.ts';
+import type { DataProvider, LineupRequest, ProviderIssue, ProviderLineup, SeasonRequest, SeasonSnapshot } from '../types.ts';
+import { mapEspnLineups, mapEspnSeason } from './mapper.ts';
+import type { EspnRefList, EspnScoreboard, EspnSeasonType, EspnStandings, EspnSummary } from './raw.ts';
 
 const SITE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 const STANDINGS = 'https://site.api.espn.com/apis/v2/sports/soccer';
@@ -31,6 +31,14 @@ export class EspnProvider implements DataProvider {
     this.#http = http;
     this.#ttl = ttl;
     this.#logger = logger;
+  }
+
+  async fetchLineups(request: LineupRequest): Promise<ProviderLineup[]> {
+    const comp = request.competition as EspnCompetitionConfig;
+    const url = `${SITE}/${encodeURIComponent(comp.liga)}/summary?event=${encodeURIComponent(request.matchExternalId)}`;
+    // Caché corta: las alineaciones aparecen poco antes del partido.
+    const res = await this.#http.getJson<EspnSummary>(url, { ttlSeconds: 60 });
+    return mapEspnLineups(res.data);
   }
 
   async fetchSeason(request: SeasonRequest): Promise<SeasonSnapshot> {

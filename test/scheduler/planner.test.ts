@@ -3,9 +3,10 @@ import { describe, it } from 'node:test';
 import type { PostKind } from '../../src/core/config.ts';
 import { standingsView } from '../../src/content/views.ts';
 import { planCandidates } from '../../src/scheduler/planner.ts';
+import type { StatLineup } from '../../src/stats/types.ts';
 import { A, B, C, D, ctxFor, event, match, player, season } from '../helpers.ts';
 
-const ALL: PostKind[] = ['cartelera', 'resultado', 'resumen', 'tabla', 'goleadores', 'equipo', 'duelo'];
+const ALL: PostKind[] = ['cartelera', 'resultado', 'resumen', 'tabla', 'goleadores', 'equipo', 'duelo', 'alineaciones'];
 const config = { ventanaDias: 3, anticipacionCarteleraHoras: 72, anticipacionPreviaHoras: 24 };
 
 // Fecha 1: sábado 7 y domingo 8 de marzo (hora de Ecuador = UTC-5). Fecha 2: sábado 14.
@@ -154,6 +155,27 @@ describe('planificador', () => {
     assert.equal(at('resumen'), '2026-03-08T23:30:00Z');
     assert.equal(at('goleadores'), '2026-03-09T00:30:00Z');
     assert.equal(at('equipo'), '2026-03-09T15:00:00Z');
+  });
+
+  it('publica las alineaciones en cuanto ambos equipos tienen sus 11 titulares, aun de madrugada', () => {
+    const lineup = (teamId: number, starters: number): StatLineup => ({
+      teamId,
+      formation: '4-4-2',
+      players: Array.from({ length: 18 }, (_, i) => ({ playerId: teamId * 100 + i, name: `J${i}`, jersey: String(i + 1), position: null, formationPlace: null, starter: i < starters })),
+    });
+    // Partido a las 07:00 de Ecuador (12:00Z), fuera del horario habitual de publicación.
+    const m = match(A, B, null, '2026-03-14T12:00:00Z', { id: 21 });
+    const data = season([m], { lineups: new Map([[21, [lineup(A.id, 11), lineup(B.id, 10)]]]) });
+    assert.equal(plan('2026-03-14T11:00:00Z', { data, kinds: ['alineaciones'] }).length, 0);
+
+    data.lineups.set(21, [lineup(A.id, 11), lineup(B.id, 11)]);
+    const [c] = plan('2026-03-14T11:00:00Z', { data, kinds: ['alineaciones'] });
+    assert.equal(c?.dedupeKey, 'alineaciones:prueba:21');
+    assert.equal(c?.scheduledFor, '2026-03-14T11:00:00Z');
+    assert.equal(c?.expiresAt, '2026-03-14T12:45:00Z');
+    // Pasados 45 minutos de juego ya no tiene sentido.
+    data.matches[0] = { ...m, status: 'live' };
+    assert.equal(plan('2026-03-14T12:50:00Z', { data, kinds: ['alineaciones'] }).length, 0);
   });
 
   it('solo produce los tipos habilitados para la competición', () => {

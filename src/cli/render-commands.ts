@@ -7,6 +7,7 @@ import {
   createViewContext,
   fixturesView,
   headToHeadView,
+  lineupsView,
   resultView,
   scorersView,
   standingsView,
@@ -24,6 +25,8 @@ import { loadSeason } from '../stats/load.ts';
 import { lastCompletedMatchday, matchdays, nextMatchday } from '../stats/matchday.ts';
 import { tableRulesFor } from '../stats/verify.ts';
 import { flagInt, flagString, type ParsedArgs } from './args.ts';
+import { many } from '../db/connection.ts';
+import { syncLineups } from '../sync/lineups.ts';
 
 const out = (line = '') => process.stdout.write(line + '\n');
 
@@ -43,9 +46,11 @@ export function copyContextFor(app: AppContext, view: ViewContext): CopyContext 
 }
 
 /** Vistas de muestra de los 7 tipos de contenido a partir de los datos guardados. */
-function sampleViews(app: AppContext, args: ParsedArgs): { ctx: ViewContext; items: { name: string; view: AnyView }[] } {
+async function sampleViews(app: AppContext, args: ParsedArgs): Promise<{ ctx: ViewContext; items: { name: string; view: AnyView }[] }> {
   const withLogos = args.flags.logos === true ? true : undefined;
-  const ctx = viewContextFor(app, flagString(args, 'competicion') ?? 'serie-a', flagInt(args, 'temporada') ?? app.config.file.temporada, withLogos);
+  const code = flagString(args, 'competicion') ?? 'serie-a';
+  const year = flagInt(args, 'temporada') ?? app.config.file.temporada;
+  let ctx = viewContextFor(app, code, year, withLogos);
   const days = matchdays(ctx.data);
   const done = lastCompletedMatchday(days);
   const next = nextMatchday(days, new Date()) ?? days.at(-1);
@@ -55,6 +60,15 @@ function sampleViews(app: AppContext, args: ParsedArgs): { ctx: ViewContext; ite
   const preview = next.core.find((m) => m.status === 'scheduled') ?? next.matches[0]!;
   const teamAbbr = flagString(args, 'equipo') ?? 'LDU';
   const team = [...ctx.data.teams.values()].find((t) => t.abbr === teamAbbr) ?? ctx.data.teams.get(featured.homeTeamId)!;
+  // Alineaciones de muestra: las guardadas o, si no hay, las del partido de ejemplo ya jugado.
+  let lineupMatch = ctx.data.matches.find((m) => (ctx.data.lineups.get(m.id)?.length ?? 0) === 2);
+  if (!lineupMatch) {
+    const ext = many<{ external_id: string }>(app.db, 'SELECT external_id FROM matches WHERE id = :id', { id: featured.id })[0]?.external_id;
+    if (ext) await syncLineups(app, code, { matchExternalId: ext, season: year });
+    ctx = viewContextFor(app, code, year, withLogos);
+    lineupMatch = ctx.data.matches.find((m) => (ctx.data.lineups.get(m.id)?.length ?? 0) === 2);
+  }
+  const lineupDay = lineupMatch?.round != null ? days.find((d) => d.stageId === lineupMatch!.stageId && d.round === lineupMatch!.round) : undefined;
   return { ctx, items: [
     { name: '1-cartelera', view: fixturesView(ctx, next) },
     { name: '2-resultado', view: resultView(ctx, featured, done) },
@@ -63,6 +77,7 @@ function sampleViews(app: AppContext, args: ParsedArgs): { ctx: ViewContext; ite
     { name: '5-goleadores', view: scorersView(ctx) },
     { name: '6-equipo', view: teamStatsView(ctx, team.id) },
     { name: '7-duelo', view: headToHeadView(ctx, preview, next) },
+    ...(lineupMatch ? [{ name: '8-alineaciones', view: lineupsView(ctx, lineupMatch, lineupDay) as AnyView }] : []),
   ] };
 }
 
@@ -82,7 +97,7 @@ export const renderCommands = {
     const brand = brandFrom(app.config);
     const which = flagString(args, 'formato');
     const selected: Format[] = which === 'vertical' ? [formats.vertical] : which === 'cuadrado' ? [formats.cuadrado] : [formats.vertical, formats.cuadrado];
-    const { ctx, items } = sampleViews(app, args);
+    const { ctx, items } = await sampleViews(app, args);
     const copy = copyContextFor(app, ctx);
     for (const { name, view } of items) {
       const caption = writeCaption(view, copy);

@@ -10,13 +10,14 @@ import type {
   MatchStatus,
   ProviderGroup,
   ProviderIssue,
+  ProviderLineup,
   ProviderMatch,
   ProviderMatchEvent,
   ProviderStage,
   ProviderTeam,
   ReferenceStanding,
 } from '../types.ts';
-import type { EspnCompetitor, EspnDetail, EspnEvent, EspnSeasonType, EspnStandings, EspnStatus, EspnTeam } from './raw.ts';
+import type { EspnCompetitor, EspnDetail, EspnEvent, EspnSeasonType, EspnStandings, EspnStatus, EspnSummary, EspnTeam } from './raw.ts';
 
 export interface EspnMapInput {
   seasonTypes: EspnSeasonType[];
@@ -309,4 +310,26 @@ function mapDetails(details: EspnDetail[], ref: string, issues: ProviderIssue[])
 /** ESPN publica el fin de fase como "03:59Z"; se incluye el minuto completo. */
 function endOfMinute(iso: string): string {
   return iso.replace(/:00Z$/, ':59Z');
+}
+
+/** Alineaciones del endpoint summary. Lista vacía si ESPN todavía no las publicó. */
+export function mapEspnLineups(summary: EspnSummary): ProviderLineup[] {
+  return (summary.rosters ?? [])
+    .filter((r) => (r.roster ?? []).length > 0)
+    .map((r) => ({
+      teamExternalId: r.team.id,
+      formation: r.formation?.trim() || null,
+      players: (r.roster ?? []).map((p) => {
+        const place = p.formationPlace === undefined || p.formationPlace === '' ? NaN : Number(p.formationPlace);
+        return {
+          externalId: p.athlete.id,
+          name: p.athlete.displayName,
+          shortName: p.athlete.lastName || p.athlete.shortName || p.athlete.displayName,
+          jersey: p.jersey ?? null,
+          position: p.position?.abbreviation ?? null,
+          formationPlace: Number.isFinite(place) && place > 0 ? place : null,
+          starter: p.starter === true,
+        };
+      }),
+    }));
 }

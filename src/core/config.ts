@@ -64,7 +64,7 @@ export interface FileConfig {
   };
 }
 
-export type PostKind = 'cartelera' | 'resultado' | 'resumen' | 'tabla' | 'goleadores' | 'equipo' | 'duelo';
+export type PostKind = 'cartelera' | 'resultado' | 'resumen' | 'tabla' | 'goleadores' | 'equipo' | 'duelo' | 'alineaciones';
 
 export interface PublishingConfig {
   /** Máximo de publicaciones por día (fecha de Ecuador). */
@@ -84,6 +84,8 @@ export interface PublishingConfig {
   separacionPreviasMinutos?: number;
   /** Franja local en la que se publica (los resultados salen a cualquier hora). */
   horario?: { desde: string; hasta: string };
+  /** Desde cuántas horas antes del partido se consultan las alineaciones (2 por defecto). */
+  alineacionesHorasAntes?: number;
   /** Escalonado al cerrar una fecha: resumen y goleadores N minutos después; el equipo, a una hora local fija. */
   cierreFecha?: { resumenMinutos: number; goleadoresMinutos: number; equipoHora: string };
   /** Tipos de publicación habilitados por competición. */

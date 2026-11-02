@@ -4,7 +4,7 @@ import { AppError } from '../core/errors.ts';
 import { many, type Db } from '../db/connection.ts';
 import { CompetitionsRepo } from '../db/repositories/competitions.ts';
 import type { EventKind, MatchStatus, StageKind } from '../providers/types.ts';
-import type { SeasonData, StatPlayer, StatTeam } from './types.ts';
+import type { SeasonData, StatLineup, StatPlayer, StatTeam } from './types.ts';
 
 export function loadSeason(db: Db, competitionCode: string, year: number): SeasonData {
   const comps = new CompetitionsRepo(db);
@@ -81,5 +81,21 @@ export function loadSeason(db: Db, competitionCode: string, year: number): Seaso
     { s: season.seasonId },
   ).map((a) => ({ teamId: a.team_id, points: a.points, reason: a.reason, effectiveFrom: a.effective_from }));
 
-  return { competitionCode, competitionName: season.competitionName, year, stages, groups, teams, players, matches, events, adjustments };
+  const lineups = new Map<number, StatLineup[]>();
+  const lineupRows = many<{ match_id: number; team_id: number; formation: string | null; player_id: number; name: string; jersey: string | null; position: string | null; formation_place: number | null; starter: number }>(
+    db,
+    `SELECT l.match_id, l.team_id, l.formation, p.player_id, p.name, p.jersey, p.position, p.formation_place, p.starter
+     FROM match_lineups l JOIN lineup_players p ON p.match_id = l.match_id AND p.team_id = l.team_id
+     JOIN matches m ON m.id = l.match_id JOIN stages s ON s.id = m.stage_id WHERE s.season_id = :season`,
+    { season: season.seasonId },
+  );
+  for (const r of lineupRows) {
+    let list = lineups.get(r.match_id);
+    if (!list) lineups.set(r.match_id, (list = []));
+    let team = list.find((l) => l.teamId === r.team_id);
+    if (!team) list.push((team = { teamId: r.team_id, formation: r.formation, players: [] }));
+    team.players.push({ playerId: r.player_id, name: r.name, jersey: r.jersey, position: r.position, formationPlace: r.formation_place, starter: r.starter === 1 });
+  }
+
+  return { competitionCode, competitionName: season.competitionName, year, stages, groups, teams, players, matches, events, adjustments, lineups };
 }

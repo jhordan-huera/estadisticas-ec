@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { headToHeadView } from '../../src/content/views.ts';
+import { headToHeadView, lineupsView } from '../../src/content/views.ts';
 import { formats } from '../../src/design/tokens.ts';
 import { slidesFor } from '../../src/render/index.ts';
 import { teamEventStats } from '../../src/stats/team.ts';
+import type { StatLineup } from '../../src/stats/types.ts';
 import { A, B, C, ctxFor, event, match, player, season } from '../helpers.ts';
 
 const brand = { name: 'Estadísticas EC', handle: '@prueba', disclaimer: 'No afiliados a la LigaPro ni a los clubes' };
@@ -48,5 +49,30 @@ describe('previa en carrusel', () => {
     assert.equal(row('Goles en contra').better, 'lower');
     assert.equal(view.previous.length, 1);
     assert.equal(view.homeSide.record, '0G 0E 1P');
+  });
+});
+
+describe('alineaciones confirmadas', () => {
+  const lineup = (teamId: number): StatLineup => ({
+    teamId,
+    formation: '4-4-2',
+    players: Array.from({ length: 11 }, (_, i) => ({ playerId: teamId * 100 + i, name: `J${i}`, jersey: String(i + 1), position: i === 0 ? 'G' : null, formationPlace: i + 1, starter: true })),
+  });
+
+  it('arma un carrusel con una imagen por equipo, primero el local', () => {
+    const m = match(A, B, null, '2026-08-01T20:00:00Z', { id: 31 });
+    const ctx = ctxFor(season([m], { lineups: new Map([[31, [lineup(A.id), lineup(B.id)]]]) }));
+    const view = lineupsView(ctx, m);
+    assert.deepEqual(view.home.rows.map((r) => r.length), [1, 4, 4, 2]);
+    const [first, second] = slidesFor(view, formats.vertical, brand).map((s) => JSON.stringify(s));
+    assert.ok(first!.includes('"LOCAL"') && first!.indexOf(A.shortName) < first!.indexOf(B.shortName));
+    assert.ok(second!.includes('"VISITANTE"') && second!.indexOf(B.shortName) < second!.indexOf(A.shortName));
+    assert.equal(slidesFor(view, formats.cuadrado, brand).length, 2);
+  });
+
+  it('avisa si falta la alineación de un equipo en vez de publicar media cancha', () => {
+    const m = match(A, B, null, '2026-08-01T20:00:00Z', { id: 32 });
+    const ctx = ctxFor(season([m], { lineups: new Map([[32, [lineup(A.id)]]]) }));
+    assert.throws(() => lineupsView(ctx, m), /no tiene alineación/);
   });
 });

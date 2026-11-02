@@ -79,6 +79,7 @@ export function season(matches: StatMatch[], extra: Partial<SeasonData> = {}): S
     matches,
     events: [],
     adjustments: [],
+    lineups: new Map(),
     ...extra,
   };
 }

@@ -7,6 +7,7 @@ import { diagnoseInstagram } from '../publish/diagnostic.ts';
 import { publicUrlFor } from '../publish/factory.ts';
 import { cleanupMedia, mediaToPublish, planPosts, publishQueue, renderQueue } from '../scheduler/pipeline.ts';
 import { PostQueue, type PostStatus } from '../scheduler/queue.ts';
+import { syncLineups } from '../sync/lineups.ts';
 import { syncCompetitions } from '../sync/run.ts';
 import { flagInt, flagString, type ParsedArgs } from './args.ts';
 
@@ -77,6 +78,14 @@ export const pipelineCommands = {
     const lines = await diagnoseInstagram(process.env, app.config.file.publicacion.instagram.version);
     for (const l of lines) out(`  ${l.ok ? '✓' : '✗'} ${l.label}: ${l.detail}`);
     return lines.every((l) => l.ok) ? 0 : 1;
+  },
+
+  /** Consulta y guarda alineaciones: las de los partidos próximos o las de un partido concreto. */
+  alineaciones: async (app: AppContext, args: ParsedArgs) => {
+    const code = flagString(args, 'competicion') ?? 'serie-a';
+    const res = await syncLineups(app, code, { matchExternalId: flagString(args, 'partido'), now: nowFrom(args) });
+    out(`Alineaciones ${code}: consultados ${res.checked} · guardados ${res.stored} · con error ${res.errors}`);
+    return res.errors ? 1 : 0;
   },
 
   /** Envía un aviso de prueba por los canales configurados (ntfy / Telegram). */

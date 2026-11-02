@@ -7,6 +7,7 @@ import type { VNode } from '../design/h.ts';
 import type { Format } from '../design/tokens.ts';
 import { fixturesTemplate } from './templates/fixtures.ts';
 import { h2hTemplate, previewSlides } from './templates/h2h.ts';
+import { lineupSlides, lineupsTemplate } from './templates/lineups.ts';
 import { resultTemplate } from './templates/result.ts';
 import { scorersTemplate } from './templates/scorers.ts';
 import { standingsTemplate } from './templates/standings.ts';
@@ -36,10 +37,14 @@ export function templateFor(view: AnyView, format: Format, brand: BrandInfo): VN
       return teamTemplate(view, format, brand);
     case 'duelo':
       return h2hTemplate(view, format, brand);
+    case 'alineaciones':
+      return lineupsTemplate(view, format, brand);
   }
 }
 
-/** Imágenes de una publicación: la previa es un carrusel; el resto, una sola imagen. */
+/** Imágenes de una publicación: la previa y las alineaciones son carruseles; el resto, una sola imagen. */
 export function slidesFor(view: AnyView, format: Format, brand: BrandInfo): VNode[] {
-  return view.kind === 'duelo' ? previewSlides(view, format, brand) : [templateFor(view, format, brand)];
+  if (view.kind === 'duelo') return previewSlides(view, format, brand);
+  if (view.kind === 'alineaciones') return lineupSlides(view, format, brand);
+  return [templateFor(view, format, brand)];
 }

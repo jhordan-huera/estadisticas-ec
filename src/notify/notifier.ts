@@ -170,4 +170,5 @@ export const KIND_LABEL: Record<string, string> = {
   goleadores: 'Goleadores',
   equipo: 'Radiografía de equipo',
   duelo: 'Previa',
+  alineaciones: 'Alineaciones confirmadas',
 };

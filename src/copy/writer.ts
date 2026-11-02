@@ -6,6 +6,7 @@ import type {
   AnyView,
   FixturesView,
   HeadToHeadView,
+  LineupsView,
   ResultView,
   ScorersView,
   StandingsView,
@@ -64,6 +65,8 @@ export function seedFor(view: AnyView): string {
       return `${view.kind}:${view.fingerprint}`;
     case 'equipo':
       return `${view.kind}:${view.team.id}:${view.profile.total.played}`;
+    case 'alineaciones':
+      return `${view.kind}:${view.match.id}`;
   }
 }
 
@@ -91,6 +94,9 @@ export function writeCaption(view: AnyView, ctx: CopyContext): Caption {
       break;
     case 'duelo':
       body = h2h(view, seed);
+      break;
+    case 'alineaciones':
+      body = lineups(view);
       break;
   }
   const hashtags = hashtagsFor(view.kind, body.teams, ctx.config.hashtags, teamHashtagMap(ctx.teamOverrides));
@@ -276,6 +282,26 @@ function h2h(view: HeadToHeadView, seed: string) {
     teams: [view.home, view.away],
     situation: h.played.length ? 'duelo' : 'duelo+primer_cruce',
     alt: `Previa en ${h.played.length ? 3 : 2} imágenes de ${view.home.shortName} contra ${view.away.shortName}, ${view.dateLabel} a las ${view.time}: posiciones, forma, comparativa de la temporada${h.played.length ? ` e historial (${h.winsA}-${h.draws}-${h.winsB})` : ''}.`,
+  };
+}
+
+function lineups(view: LineupsView) {
+  // Notación clásica: arquero; defensas; volantes; delanteros.
+  const xi = (side: LineupsView['home']) => side.rows.map((row) => row.map((p) => p.name).join(', ')).join('; ');
+  const team = (side: LineupsView['home']) => `${side.team.shortName}${side.formation ? ` (${side.formation})` : ''}`;
+  const where = view.venue ? ` · ${view.venue}` : '';
+  return {
+    lines: [
+      `📋 Alineaciones confirmadas: ${view.home.team.shortName} vs ${view.away.team.shortName}`,
+      `${view.kicker ? `${view.kicker} · ` : ''}${capitalize(view.dateLabel)}, ${view.time}${where}`,
+      '',
+      `${team(view.home)}: ${xi(view.home)}.`,
+      '',
+      `${team(view.away)}: ${xi(view.away)}.`,
+    ],
+    teams: [view.home.team, view.away.team],
+    situation: 'alineaciones',
+    alt: `Carrusel de alineaciones: primero ${team(view.home)}, después ${team(view.away)}; cada titular sobre la cancha con dorsal y apellido, y los suplentes debajo.`,
   };
 }
 

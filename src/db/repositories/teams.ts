@@ -103,6 +103,15 @@ export class TeamsRepo {
     return lastId;
   }
 
+  /** Id del jugador; lo crea si no existe, pero no modifica los nombres ya guardados. */
+  ensurePlayer(provider: string, player: ProviderPlayer, teamId: number | null): number {
+    const linked = one<{ player_id: number }>(this.#db, 'SELECT player_id FROM player_provider_ids WHERE provider = :p AND external_id = :e', {
+      p: provider,
+      e: player.externalId,
+    });
+    return linked ? linked.player_id : this.resolvePlayer(provider, player, teamId);
+  }
+
   #create(team: ProviderTeam, override: TeamOverride | undefined): number {
     const now = nowIso();
     return run(

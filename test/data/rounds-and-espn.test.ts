@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { mapEspnSeason, mapStatus, parseMinute } from '../../src/providers/espn/mapper.ts';
-import type { EspnEvent, EspnSeasonType, EspnStandings } from '../../src/providers/espn/raw.ts';
+import { mapEspnLineups, mapEspnSeason, mapStatus, parseMinute } from '../../src/providers/espn/mapper.ts';
+import type { EspnEvent, EspnSeasonType, EspnStandings, EspnSummary } from '../../src/providers/espn/raw.ts';
 import { inferRounds, type RoundCandidate } from '../../src/sync/rounds.ts';
 
 describe('inferencia de jornadas', () => {
@@ -114,5 +114,38 @@ describe('traducción de ESPN', () => {
     assert.equal(mapStatus({ type: { name: 'STATUS_POSTPONED', state: 'pre', completed: false } }, 'x', issues).status, 'postponed');
     assert.equal(mapStatus({ type: { name: 'STATUS_SECOND_HALF', state: 'in', completed: false } }, 'x', issues).status, 'live');
     assert.deepEqual(mapStatus({ type: { name: 'STATUS_FINAL_PEN', state: 'post', completed: true } }, 'x', issues), { status: 'finished', decidedBy: 'penalties' });
+  });
+});
+
+describe('alineaciones de ESPN', () => {
+  it('traduce titulares y suplentes con apellido, dorsal, posición y lugar en el esquema', () => {
+    const summary: EspnSummary = {
+      rosters: [
+        {
+          homeAway: 'home',
+          formation: ' 4-4-2 ',
+          team: { id: '10' },
+          roster: [
+            { starter: true, jersey: '1', formationPlace: '1', position: { abbreviation: 'G' }, athlete: { id: 'a1', displayName: 'Juan Pérez', lastName: 'Pérez' } },
+            { starter: false, jersey: '22', formationPlace: '0', position: { abbreviation: 'SUB' }, athlete: { id: 'a2', displayName: 'Luis Mora', shortName: 'L. Mora' } },
+          ],
+        },
+        { homeAway: 'away', team: { id: '20' }, roster: [] },
+      ],
+    };
+    assert.deepEqual(mapEspnLineups(summary), [
+      {
+        teamExternalId: '10',
+        formation: '4-4-2',
+        players: [
+          { externalId: 'a1', name: 'Juan Pérez', shortName: 'Pérez', jersey: '1', position: 'G', formationPlace: 1, starter: true },
+          { externalId: 'a2', name: 'Luis Mora', shortName: 'L. Mora', jersey: '22', position: 'SUB', formationPlace: null, starter: false },
+        ],
+      },
+    ]);
+  });
+
+  it('sin alineaciones publicadas devuelve una lista vacía', () => {
+    assert.deepEqual(mapEspnLineups({}), []);
   });
 });

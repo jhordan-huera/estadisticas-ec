@@ -12,7 +12,8 @@ import { computeScorers, topScorers, type ScorerRow } from '../stats/scorers.ts'
 import { leagueMatches, seasonTables, tableMovement } from '../stats/season.ts';
 import type { StandingRow } from '../stats/standings.ts';
 import { teamEventStats, teamProfile, type TeamEventStats, type TeamProfile } from '../stats/team.ts';
-import type { SeasonData, StatMatch } from '../stats/types.ts';
+import type { SeasonData, StatLineupPlayer, StatMatch } from '../stats/types.ts';
+import { lineupRows } from '../stats/lineup-layout.ts';
 
 export interface ViewContext {
   data: SeasonData;
@@ -438,4 +439,52 @@ function streakLabel(p: TeamProfile): string | undefined {
   return undefined;
 }
 
-export type AnyView = FixturesView | ResultView | SummaryView | StandingsView | ScorersView | TeamStatsView | HeadToHeadView;
+// ── Alineaciones confirmadas ──────────────────────────────────────────────
+
+export interface LineupSide {
+  team: TeamVisual;
+  formation: string | null;
+  /** Titulares por filas: arquero primero; cada fila de banda izquierda a derecha del equipo. */
+  rows: StatLineupPlayer[][];
+  bench: StatLineupPlayer[];
+}
+
+export interface LineupsView {
+  kind: 'alineaciones';
+  competition: string;
+  kicker: string;
+  match: StatMatch;
+  home: LineupSide;
+  away: LineupSide;
+  dateLabel: string;
+  time: string;
+  venue?: string;
+}
+
+export function lineupsView(ctx: ViewContext, match: StatMatch, day?: Matchday): LineupsView {
+  const lineups = ctx.data.lineups.get(match.id) ?? [];
+  const side = (teamId: number): LineupSide => {
+    const l = lineups.find((x) => x.teamId === teamId);
+    if (!l) throw new Error(`El partido ${match.id} no tiene alineación del equipo ${teamId}`);
+    return {
+      team: ctx.visuals.get(teamId)!,
+      formation: l.formation,
+      rows: lineupRows(l.formation, l.players.filter((p) => p.starter)),
+      bench: l.players.filter((p) => !p.starter),
+    };
+  };
+  const local = toLocal(match.kickoffUtc, ctx.timeZone);
+  return {
+    kind: 'alineaciones',
+    competition: competitionLabel(ctx),
+    kicker: day ? matchdayKicker(ctx, day) : (match.roundLabel ?? ''),
+    match,
+    home: side(match.homeTeamId),
+    away: side(match.awayTeamId),
+    dateLabel: `${local.weekday} ${local.dayMonth}`,
+    time: local.time,
+    venue: match.venue ?? undefined,
+  };
+}
+
+export type AnyView = FixturesView | ResultView | SummaryView | StandingsView | ScorersView | TeamStatsView | HeadToHeadView | LineupsView;
