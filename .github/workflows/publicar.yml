@@ -41,6 +41,14 @@ jobs:
       # automatico y ejecuciones programadas → variable DRY_RUN.
       DRY_RUN: ${{ (github.ref_name != 'main' && 'true') || (github.event_name == 'workflow_dispatch' && inputs.modo == 'real' && 'false') || (github.event_name == 'workflow_dispatch' && inputs.modo == 'simulacion' && 'true') || vars.DRY_RUN || 'true' }}
     steps:
+      - name: Comprobar el modo (fuera de main nunca se publica de verdad)
+        run: |
+          echo "Rama: ${{ github.ref_name }} · estado: $ESTADO_BRANCH · DRY_RUN=$DRY_RUN"
+          if [ "${{ github.ref_name }}" != "main" ] && [ "$DRY_RUN" != "true" ]; then
+            echo "::error::Fuera de main solo se permite simulación"
+            exit 1
+          fi
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
