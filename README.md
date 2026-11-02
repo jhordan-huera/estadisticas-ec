@@ -211,6 +211,11 @@ Con el modo `automatico` manda la variable `DRY_RUN`: para pasar a simulación n
 
 El workflow "Diagnóstico de Instagram" envía un aviso de prueba por los canales configurados (`npm run cli -- avisos-prueba`).
 
+**Rama `dev` (pruebas de estilo).** Los cambios de diseño o de textos se prueban en `dev` antes de pasarlos a `main`:
+- Cada push a `dev` lanza el workflow **Muestras**, que genera las 7 piezas con sus textos y las deja como artefacto descargable en la ejecución.
+- Desde cualquier rama que no sea `main`, **Publicar** trabaja siempre en simulación y con su propio estado (`estado-dev`), así que nunca toca la cuenta de Instagram ni la cola real.
+- En local: `npm run muestras -- --logos` (resultado en `out/muestras-con-logos/`).
+
 **La rama `estado`** contiene la base de datos SQLite y las imágenes de los últimos 30 días. Se reescribe en cada ejecución como un único commit, para que el repositorio no crezca con el historial de imágenes. No la edites a mano.
 
 Para activar el panel web: *Settings → Pages → Source: GitHub Actions*.

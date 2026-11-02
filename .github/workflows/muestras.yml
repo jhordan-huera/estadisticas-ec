@@ -1,0 +1,42 @@
+name: Muestras
+
+# Genera las 7 piezas (con escudos y sus textos) para revisar cambios de estilo sin publicar
+# nada: corre en cada push a dev o a mano, y deja las imágenes como artefacto descargable.
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch: {}
+
+concurrency:
+  group: muestras-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  muestras:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: npm
+
+      - run: npm ci
+
+      - name: Sincronizar la liga
+        run: node src/cli/main.ts sincronizar --competicion serie-a
+
+      - name: Generar muestras
+        run: node src/cli/main.ts muestras --logos
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: muestras-${{ github.ref_name }}-${{ github.run_number }}
+          path: out/muestras-con-logos/
+          retention-days: 14

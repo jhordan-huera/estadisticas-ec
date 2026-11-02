@@ -33,9 +33,13 @@ jobs:
       MARCADOR_DB: estado/marcador.sqlite
       MARCADOR_MEDIA: estado/media
       MARCADOR_STATE_DIR: estado
-      IMAGE_BASE_URL: ${{ vars.IMAGE_BASE_URL || format('https://raw.githubusercontent.com/{0}/estado', github.repository) }}
-      # real → publica; simulacion → simula; automatico y ejecuciones programadas → variable DRY_RUN.
-      DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.modo == 'real' && 'false') || (github.event_name == 'workflow_dispatch' && inputs.modo == 'simulacion' && 'true') || vars.DRY_RUN || 'true' }}
+      # Solo main publica de verdad y usa la rama "estado"; cualquier otra rama (p. ej. dev)
+      # trabaja siempre en simulación y con su propio estado ("estado-<rama>").
+      ESTADO_BRANCH: ${{ github.ref_name == 'main' && 'estado' || format('estado-{0}', github.ref_name) }}
+      IMAGE_BASE_URL: ${{ (github.ref_name == 'main' && vars.IMAGE_BASE_URL) || format('https://raw.githubusercontent.com/{0}/{1}', github.repository, github.ref_name == 'main' && 'estado' || format('estado-{0}', github.ref_name)) }}
+      # Fuera de main → siempre simulación. En main: real → publica; simulacion → simula;
+      # automatico y ejecuciones programadas → variable DRY_RUN.
+      DRY_RUN: ${{ (github.ref_name != 'main' && 'true') || (github.event_name == 'workflow_dispatch' && inputs.modo == 'real' && 'false') || (github.event_name == 'workflow_dispatch' && inputs.modo == 'simulacion' && 'true') || vars.DRY_RUN || 'true' }}
     steps:
       - uses: actions/checkout@v5
 
