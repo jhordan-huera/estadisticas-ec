@@ -57,7 +57,7 @@ TXT
     fi
     # La siguiente comparación de esta misma ejecución parte del estado recién subido.
     if [ -n "${GITHUB_ENV:-}" ] && [ -n "$ACTUAL" ]; then echo "HUELLA_BASE=$ACTUAL" >> "$GITHUB_ENV"; fi
-    COMMIT=$(git -c user.name="estadisticas-ec-bot" -c user.email="actions@users.noreply.github.com" commit-tree "$NEW_TREE" -m "$MSG")
+    COMMIT=$(git -c user.name="datazo-ec-bot" -c user.email="actions@users.noreply.github.com" commit-tree "$NEW_TREE" -m "$MSG")
     git push --quiet --force origin "$COMMIT:refs/heads/$BRANCH"
     git update-ref "refs/remotes/origin/$BRANCH" "$COMMIT"
     echo "Estado guardado en $BRANCH ($MSG)"

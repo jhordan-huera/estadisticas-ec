@@ -1,4 +1,4 @@
-// Sistema de diseño de Estadísticas EC: paleta, tipografía, espaciado, rejilla y formatos.
+// Sistema de diseño de Datazo EC: paleta, tipografía, espaciado, rejilla y formatos.
 // Dirección visual: tema claro con los colores del logo — fondo claro azulado, texto azul
 // marino, cifras condensadas grandes y un único acento azul.
 

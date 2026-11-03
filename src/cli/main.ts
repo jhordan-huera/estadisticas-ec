@@ -1,4 +1,4 @@
-// CLI de Estadísticas EC. Uso: node src/cli/main.ts <comando> [opciones]
+// CLI de Datazo EC. Uso: node src/cli/main.ts <comando> [opciones]
 
 import { createApp, type AppContext } from '../app.ts';
 import { describeError } from '../core/errors.ts';
@@ -15,7 +15,7 @@ import { statsCommands } from './stats-commands.ts';
 
 const out = (line = '') => process.stdout.write(line + '\n');
 
-const HELP = `Estadísticas EC — comandos:
+const HELP = `Datazo EC — comandos:
   migrar                         Aplica las migraciones pendientes de la base de datos
   sincronizar [--competicion c]  Descarga y guarda los datos (todas las competiciones por defecto)
               [--temporada AAAA] [--cada MIN]  (--cada: omite si ya se sincronizó con éxito hace menos de MIN minutos)

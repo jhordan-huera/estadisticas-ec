@@ -1,8 +1,8 @@
-# Estadísticas EC
+# Datazo EC
 
 Generador automático de **imágenes y textos para redes sociales** sobre toda la Serie A de Ecuador: cartelera, resultados, resumen de cada fecha, tabla de posiciones, goleadores, estadísticas por equipo, previas con duelo directo y alineaciones confirmadas. Calcula sus propias estadísticas acumuladas a partir de los datos de cada partido.
 
-> **Aviso legal.** Estadísticas EC es un proyecto independiente, **no afiliado a la LigaPro ni a ningún club**. No usa sus nombres comerciales ni sus logos como marca propia. Identifica a los equipos con su nombre, una abreviatura, un color y, si está activado, su escudo. Cada imagen y cada texto llevan el aviso *"No afiliados a la LigaPro ni a los clubes"* (configurable en `marca.pie`). Los datos provienen de fuentes públicas de terceros (ESPN y TheSportsDB) y pueden contener errores u omisiones.
+> **Aviso legal.** Datazo EC es un proyecto independiente, **no afiliado a la LigaPro ni a ningún club**. No usa sus nombres comerciales ni sus logos como marca propia. Identifica a los equipos con su nombre, una abreviatura, un color y, si está activado, su escudo. Cada imagen y cada texto llevan el aviso *"No afiliados a la LigaPro ni a los clubes"* (configurable en `marca.pie`). Los datos provienen de fuentes públicas de terceros (ESPN y TheSportsDB) y pueden contener errores u omisiones.
 
 ---
 
@@ -239,4 +239,4 @@ Para activar el panel web: *Settings → Pages → Source: GitHub Actions*.
 
 ## Licencia
 
-Código bajo la [Licencia Estadísticas EC 1.0](LICENSE). Tipografías Barlow y Barlow Condensed bajo SIL Open Font License 1.1 (ver `assets/fonts/`). Los nombres de equipos y competiciones pertenecen a sus titulares y se usan solo con fines informativos.
+Código bajo la [Licencia Datazo EC 1.0](LICENSE). Tipografías Barlow y Barlow Condensed bajo SIL Open Font License 1.1 (ver `assets/fonts/`). Los nombres de equipos y competiciones pertenecen a sus titulares y se usan solo con fines informativos.

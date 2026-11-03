@@ -27,7 +27,7 @@ export interface FrameProps {
 }
 
 export function wordmark(brand: BrandInfo, size = 34): VNode {
-  // "ESTADÍSTICAS EC" → "ESTADÍSTICAS" en papel + "EC" en bloque lima, como un dígito de marcador.
+  // "DATAZO EC" → "DATAZO" en papel + "EC" en un bloque del color de acento, como un dígito de marcador.
   const [first, ...rest] = brand.name.toUpperCase().split(' ');
   const tail = rest.join(' ');
   return h(

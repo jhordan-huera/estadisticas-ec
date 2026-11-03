@@ -45,7 +45,7 @@ export class HttpClient {
     this.#opts = {
       fetchImpl: globalThis.fetch,
       sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
-      userAgent: 'EstadisticasEC/0.1 (+https://github.com/jhordan-huera/estadisticas-ec)',
+      userAgent: 'DatazoEC/0.1 (+https://github.com/jhordan-huera/estadisticas-ec)',
       ...options,
     };
   }

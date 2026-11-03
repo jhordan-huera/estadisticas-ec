@@ -7,7 +7,7 @@ import { teamEventStats } from '../../src/stats/team.ts';
 import type { StatLineup } from '../../src/stats/types.ts';
 import { A, B, C, ctxFor, event, match, player, season } from '../helpers.ts';
 
-const brand = { name: 'Estadísticas EC', handle: '@prueba', disclaimer: 'No afiliados a la LigaPro ni a los clubes' };
+const brand = { name: 'Datazo EC', handle: '@prueba', disclaimer: 'No afiliados a la LigaPro ni a los clubes' };
 const p1 = player(1, 'Ana', A.id);
 const p2 = player(2, 'Beto', A.id);
 const players = new Map([p1, p2].map((p) => [p.id, p]));
