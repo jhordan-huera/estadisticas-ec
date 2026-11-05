@@ -68,12 +68,8 @@ jobs:
       - name: Sincronizar la liga
         run: node src/cli/main.ts sincronizar --competicion serie-a
 
-      # TheSportsDB tiene un límite de peticiones estricto y las copas cambian poco:
-      # se sincronizan como mucho una vez por hora y, si fallan, no detienen la liga.
-      - name: Sincronizar copas (como mucho una vez por hora)
-        run: |
-          node src/cli/main.ts sincronizar --competicion copa-ecuador --cada 60 || echo "::warning::No se pudo sincronizar la Copa Ecuador"
-          node src/cli/main.ts sincronizar --competicion supercopa --cada 60 || echo "::warning::No se pudo sincronizar la Supercopa"
+      # Las copas (TheSportsDB) no se publican, así que tampoco se sincronizan. Para volver a
+      # activarlas: agregarlas en publicacion.competiciones y sincronizarlas aquí con --cada 60.
 
       - name: Planificar publicaciones
         run: node src/cli/main.ts planificar

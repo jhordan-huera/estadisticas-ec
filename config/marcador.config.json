@@ -71,9 +71,7 @@
     "horario": { "desde": "08:00", "hasta": "23:00" },
     "cierreFecha": { "resumenMinutos": 60, "goleadoresMinutos": 120, "equipoHora": "10:00" },
     "competiciones": {
-      "serie-a": ["cartelera", "resultado", "resumen", "tabla", "goleadores", "equipo", "duelo", "alineaciones"],
-      "copa-ecuador": ["resultado"],
-      "supercopa": ["resultado"]
+      "serie-a": ["cartelera", "resultado", "resumen", "tabla", "goleadores", "equipo", "duelo", "alineaciones"]
     },
     "instagram": { "version": "v23.0", "enviarTextoAlternativo": false }
   },

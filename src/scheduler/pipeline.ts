@@ -114,6 +114,7 @@ export async function renderQueue(app: AppContext, now: Date): Promise<RenderSum
   const summary: RenderSummary = { rendered: 0, failed: 0, expired };
 
   for (const post of queue.toRender(iso(now))) {
+    if (skipIfDisabled(app, queue, post)) continue;
     try {
       const ctx = contexts.get(post.competition_code, post.season);
       const view = buildView(ctx, post.kind, JSON.parse(post.subject) as Subject);
@@ -157,6 +158,17 @@ export async function renderQueue(app: AppContext, now: Date): Promise<RenderSum
     }
   }
   return summary;
+}
+
+/**
+ * Lo encolado de una competición o un tipo que después se desactivó en la configuración
+ * (p. ej. las copas) se descarta en vez de generarse o publicarse.
+ */
+export function skipIfDisabled(app: AppContext, queue: PostQueue, post: PostRow): boolean {
+  if (app.config.file.publicacion.competiciones[post.competition_code]?.includes(post.kind)) return false;
+  queue.skip(post.id, `Desactivada en la configuración (${post.competition_code}: ${post.kind})`);
+  app.logger.info(`Descartada: ${post.dedupe_key} (${post.competition_code}: ${post.kind} no se publica)`);
+  return true;
 }
 
 export function buildView(ctx: ViewContext, kind: PostKind, subject: Subject): AnyView {
@@ -227,6 +239,7 @@ export async function publishQueue(app: AppContext, now: Date, notifiers: Notifi
   const summary: PublishSummary = { mode: publisher.mode, published: 0, failed: 0, remainingToday: Math.max(0, remaining) };
 
   for (const post of queue.dueForPublishing(iso(now), remaining, publisher.mode)) {
+    if (skipIfDisabled(app, queue, post)) continue;
     try {
       const files = mediaToPublish(post, config.file.publicacion.formato);
       const images = files.map((path) => ({ path, url: publicUrlFor(config, path) }));

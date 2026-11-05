@@ -4,6 +4,8 @@ import { nullLogger } from '../../src/core/logger.ts';
 import { openDatabase, type Db } from '../../src/db/connection.ts';
 import { migrate } from '../../src/db/migrate.ts';
 import type { Candidate } from '../../src/scheduler/planner.ts';
+import type { AppContext } from '../../src/app.ts';
+import { skipIfDisabled } from '../../src/scheduler/pipeline.ts';
 import { MAX_ATTEMPTS, PostQueue } from '../../src/scheduler/queue.ts';
 
 function candidate(overrides: Partial<Candidate> = {}): Candidate {
@@ -49,6 +51,15 @@ describe('cola de publicaciones', () => {
   it('acepta las alineaciones como tipo de publicación', () => {
     assert.equal(queue.enqueue(candidate({ kind: 'alineaciones', dedupeKey: 'alineaciones:prueba:1', priority: 12 })).inserted, true);
     assert.deepEqual(queue.toRender('2026-03-10T00:00:00Z').map((p) => p.kind), ['alineaciones']);
+  });
+
+  it('descarta lo encolado de una competición que ya no se publica (p. ej. las copas)', () => {
+    queue.enqueue(candidate({ competitionCode: 'copa-ecuador', dedupeKey: 'resultado:copa-ecuador:1' }));
+    queue.enqueue(candidate({ competitionCode: 'serie-a', dedupeKey: 'resultado:serie-a:2' }));
+    const app = { config: { file: { publicacion: { competiciones: { 'serie-a': ['resultado'] } } } }, logger: nullLogger } as unknown as AppContext;
+    const kept = queue.toRender('2026-03-10T00:00:00Z').filter((p) => !skipIfDisabled(app, queue, p));
+    assert.deepEqual(kept.map((p) => p.dedupe_key), ['resultado:serie-a:2']);
+    assert.deepEqual(queue.toRender('2026-03-10T00:00:00Z').map((p) => p.dedupe_key), ['resultado:serie-a:2']);
   });
 
   it('vence lo que ya no tiene sentido publicar', () => {

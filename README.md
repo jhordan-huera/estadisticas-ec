@@ -144,7 +144,7 @@ src/
   - Etiqueta mal la fase de algunos partidos: la fase se decide por la fecha del partido.
   - El grupo que indica en el scoreboard no es fiable: se toma de la tabla.
   - Algún partido trae menos goles con detalle que su marcador: queda registrado como incidencia y como "gol sin autor".
-- **TheSportsDB (Copa Ecuador y Supercopa).** Plan gratuito:
+- **TheSportsDB (Copa Ecuador y Supercopa).** Por decisión editorial **las copas no se publican ni se sincronizan** (el módulo queda listo por si se reactivan). Plan gratuito:
   - máximo 15 partidos por consulta (se avisa cuando una ronda llega truncada);
   - sin goleadores ni marcador de penales (el ganador se deduce de la ronda siguiente);
   - límite de tasa estricto: el sistema espacia las peticiones unos 3,5 s.
@@ -205,7 +205,7 @@ Además:
    - **Cuerpo:** `{"ref":"main","inputs":{"modo":"automatico"}}`
 3. La prueba debe responder **HTTP 204**.
 
-Con el modo `automatico` manda la variable `DRY_RUN`: para pasar a simulación no hace falta tocar cron-job.org. Las copas (TheSportsDB) se sincronizan como mucho una vez por hora (`sincronizar --cada 60`), para respetar su límite de peticiones. La rama `estado` solo se sube cuando cambia algo relevante (comando `huella`), así una ejecución sin novedades no genera un commit.
+Con el modo `automatico` manda la variable `DRY_RUN`: para pasar a simulación no hace falta tocar cron-job.org. Las copas no se sincronizan ni se publican: solo la Serie A. La rama `estado` solo se sube cuando cambia algo relevante (comando `huella`), así una ejecución sin novedades no genera un commit.
 
 **Avisos (ntfy y/o Telegram).** Cada publicación real en Instagram envía un aviso con su enlace, y un fallo de publicación envía un aviso de prioridad alta. Además, en cada partido se avisa cuando se empieza a buscar las alineaciones (2 h antes) y, si ESPN no las publica antes de los 45 minutos de juego, que esta vez no habrá carrusel; cada uno sale una sola vez por partido. Y si la publicación automática empieza a fallar te llega un aviso de prioridad alta con el enlace a la ejecución, y otro cuando vuelve a funcionar (solo en esos cambios, no cada 5 minutos; no dependen de la base de datos). Cada canal se activa solo si están sus secretos:
 
